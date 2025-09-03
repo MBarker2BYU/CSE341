@@ -1,0 +1,20 @@
+{
+  "name": "cse341",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/MBarker2BYU/CSE341#readme",
+  "bugs": {
+    "url": "https://github.com/MBarker2BYU/CSE341/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MBarker2BYU/CSE341.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
