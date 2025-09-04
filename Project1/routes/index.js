@@ -5,4 +5,6 @@ router.get('/', (req, res) => {
   res.send('Hello from the root route!');
 });
 
+router.use('/users', require('./users'));
+
 module.exports = router; // Export the router
