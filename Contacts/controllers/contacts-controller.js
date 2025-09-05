@@ -1,0 +1,1 @@
+const contactModel = require('../models/contact-model');
