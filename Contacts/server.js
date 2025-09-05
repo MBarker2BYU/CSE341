@@ -38,7 +38,7 @@ database.initdb((err) => {
     // Start the server only after the database is initialized
     const server = app.listen(port, () => {
         // Log a message indicating the server is running
-        console.log(`Server is running on port ${port}`);
+        console.log(`Server is running on port http://localhost:${port}`);
     });
 
     // Graceful shutdown
