@@ -1,12 +1,17 @@
 const database = require('../database');
 const { ObjectId } = require('mongodb');    
 
+// Collection name
+// Make sure this matches the collection name in your MongoDB
+// Avoid hardcoding collection names in multiple places
+const contactsCollection = 'contacts';
+
 // Get all contacts
 exports.getAllContacts = async (req, res) => {
     try {
 
         // Fetch all contacts from the database
-        const contacts = await database.getDatabase().collection('contacts').find().toArray();
+        const contacts = await database.getDatabase().collection(contactsCollection).find().toArray();
 
         // Return the contacts
         return contacts;
@@ -22,7 +27,7 @@ exports.getAllContacts = async (req, res) => {
 exports.getContactById = async (req, res) => {
     try {
         // Fetch the contact by ID from the database
-        const contact = await database.getDatabase().collection('contacts').findOne({ _id: new ObjectId(req.params.id) });
+        const contact = await database.getDatabase().collection(contactsCollection).findOne({ _id: new ObjectId(req.params.id) });
 
         // Return the contact
         return contact;
