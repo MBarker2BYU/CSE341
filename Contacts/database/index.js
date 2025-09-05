@@ -10,7 +10,7 @@ let database = null;
 // Accepts a callback function and a database name
 // If the database is already initialized, it returns the existing instance
 // Otherwise, it connects to MongoDB and initializes the database with the provided name
-exports.initdb = async (callback, databaseName, useUnifiedTopology = true, connectTimeoutMS = 30000, 
+exports.initdb = async (callback, databaseName, connectTimeoutMS = 30000,
     maxPoolSize = 10, serverSelectionTimeoutMS = 5000) => {
 
     // Validate databaseName
@@ -38,7 +38,6 @@ exports.initdb = async (callback, databaseName, useUnifiedTopology = true, conne
 
         // Connect to MongoDB
         client = await MongoClient.connect(process.env.MONGODB_URI, {
-            useUnifiedTopology,
             connectTimeoutMS,
             maxPoolSize,
             serverSelectionTimeoutMS
@@ -74,16 +73,21 @@ exports.getDatabase = () => {
 
 // Close the database connection
 exports.close = async () => {
-    
-    // If client exists, close the connection
-    if (client) {
 
-        // Close the MongoDB client connection
-        await client.close();
-        console.log('MongoDB connection closed');
-        
-        // Reset client and database to null
-        database = null;
-        client = null;
+    try {
+            // If client exists, close the connection
+            if (client) {
+
+            // Close the MongoDB client connection
+            await client.close();
+            console.log('MongoDB connection closed');
+
+            // Reset client and database to null
+            database = null;
+            client = null;
+        }
+    } catch (err) {
+        console.error('Error closing MongoDB connection:', err);
+        throw err; // Re-throw the error for further handling if needed
     }
 };

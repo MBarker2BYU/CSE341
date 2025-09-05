@@ -1,0 +1,8 @@
+### Test Hello World
+GET http://localhost:8080/
+
+### Test Get All Contacts
+GET http://localhost:8080/contacts
+
+### Test Get Contact by ID
+GET http://localhost:8080/contacts/68bae51fd042823ce43a572b
