@@ -55,7 +55,10 @@ database.initdb((err) => {
             await database.close();
 
             // Log successful database closure
-            console.log('Database closed successfully'); // Debug log
+            console.log('Database closed successfully');
+
+            // Log the server closure process
+            console.log('Closing Express server...');
 
             // Close the Express server
             server.close((err) => {

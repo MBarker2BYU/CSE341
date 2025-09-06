@@ -1,8 +1,20 @@
-### Test Hello World
+### Test Hello World on render.com
+GET https://cse341-contacts-xvxr.onrender.com//
+
+### Test Get All Contacts on render.com
+GET https://cse341-contacts-xvxr.onrender.com/contacts
+
+### Test Get Contact by ID on render.com
+GET https://cse341-contacts-xvxr.onrender.com/contacts/68bae51fd042823ce43a572b
+
+
+### API Server must be running on localhost:8080 for the following tests
+
+### Test Hello World on localhost
 GET http://localhost:8080/
 
-### Test Get All Contacts
+### Test Get All Contacts on localhost
 GET http://localhost:8080/contacts
 
-### Test Get Contact by ID
+### Test Get Contact by ID on localhost
 GET http://localhost:8080/contacts/68bae51fd042823ce43a572b
