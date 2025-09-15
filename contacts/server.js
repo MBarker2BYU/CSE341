@@ -6,6 +6,7 @@ const database = require('./database');
 
 const defaultRouter = require('./routes/default-routes');
 const contactsRouter = require('./routes/contacts-routes');
+const swaggerRouter = require('./routes/swagger-routes');
 
 const port = process.env.PORT || 8080;
 
@@ -19,9 +20,18 @@ console.log('MONGODB_URI:', process.env.MONGODB_URI); // Debug
 // Parse JSON bodies
 app.use(express.json());
 
+// Swagger setup
+app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Headers', 'origin, X-Requested-With, Content-Type, Accept, z-key');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    next();
+});
+
 // Mount the default router
 app.use('/', defaultRouter);
 app.use('/contacts', contactsRouter);
+app.use('/', swaggerRouter);
 
 // Initialize database and start server
 // Ensure the database is initialized before starting the server

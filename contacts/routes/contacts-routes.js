@@ -6,10 +6,8 @@ const contactsController = require('../controllers/contacts-controller');
 // Define C.R.U.D. routes for contacts
 router.get('/', contactsController.getAllContacts);
 router.get('/:id', contactsController.getContactById);
-
-// Future routes for creating, updating, and deleting contacts Week02
-// router.post('/', contactsController.createContact);
-// router.put('/:id', contactsController.updateContact);
-// router.delete('/:id', contactsController.deleteContact);
+router.post('/', contactsController.createContact);
+router.put('/:id', contactsController.updateContact);
+router.delete('/:id', contactsController.deleteContact);
 
 module.exports = router;

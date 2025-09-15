@@ -1,5 +1,5 @@
 ### Test Hello World on render.com
-GET https://cse341-contacts-xvxr.onrender.com//
+GET https://cse341-contacts-xvxr.onrender.com/
 
 ### Test Get All Contacts on render.com
 GET https://cse341-contacts-xvxr.onrender.com/contacts
@@ -7,6 +7,34 @@ GET https://cse341-contacts-xvxr.onrender.com/contacts
 ### Test Get Contact by ID on render.com
 GET https://cse341-contacts-xvxr.onrender.com/contacts/68bae51fd042823ce43a572b
 
+### Test Create Contact on render.com
+POST https://cse341-contacts-xvxr.onrender.com/contacts
+Content-Type: application/json
+
+{
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john.doe@example.com",
+  "favoriteColor": "Blue",
+  "birthday": "1990-01-01"
+}
+
+@renderContactId = $.id
+
+### Test Update Contact on render.com
+PUT https://cse341-contacts-xvxr.onrender.com/contacts/{{renderContactId}}
+Content-Type: application/json
+
+{
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john.doe.updated@example.com",
+  "favoriteColor": "Green",
+  "birthday": "1990-01-01"
+}
+
+### Test Delete Contact on render.com
+DELETE https://cse341-contacts-xvxr.onrender.com/contacts/{{renderContactId}}
 
 ### API Server must be running on localhost:8080 for the following tests
 
@@ -18,3 +46,33 @@ GET http://localhost:8080/contacts
 
 ### Test Get Contact by ID on localhost
 GET http://localhost:8080/contacts/68bae51fd042823ce43a572b
+
+### Test Create Contact on localhost
+createContact:
+POST http://localhost:8080/contacts
+Content-Type: application/json
+
+{
+  "firstName": "Jane",
+  "lastName": "Smith",
+  "email": "jane.smith@example.com",
+  "favoriteColor": "Red",
+  "birthday": "1995-02-15"
+}
+
+@localContactId = $.id
+
+### Test Update Contact on localhost
+PUT http://localhost:8080/contacts/{{localContactId}}
+Content-Type: application/json
+
+{
+  "firstName": "Jane",
+  "lastName": "Smith",
+  "email": "jane.smith.updated@example.com",
+  "favoriteColor": "Purple",
+  "birthday": "1995-02-15"
+}
+
+### Test Delete Contact on localhost
+DELETE http://localhost:8080/contacts/{{localContactId}}
