@@ -46,6 +46,7 @@ exports.getUserById = async (userId) => {
 
 exports.createUser = async (newUser) => {
 
+    
     try {
 
         const db = await database.getDatabase();
@@ -65,10 +66,17 @@ exports.createUser = async (newUser) => {
 
     } catch (error) {
 
+        // Handle MongoDB duplicate key error
+        if (error.code === 11000 || (error.message && error.message.includes('duplicate key error'))) {
+            
+            const error = new Error(`Email '${newUser.email}' is already in use`)
+            
+            throw error
+        }
+
         console.error('Error creating user:', error.errInfo.details || error.message);
-
-        throw error; // Let the controller handle the error
-
+        // Ensure statusCode is set
+        throw Object.assign(error, { statusCode: error.statusCode || 500 });
     }
 }
 
@@ -77,12 +85,37 @@ exports.updateUser = async (id, updatedUser) => {
     try {
 
         const db = await database.getDatabase();
+        const userCollection = await db.collection('user');
+        
+        // Get the existing user
+        const existingUser = await userCollection.findOne({ _id: new ObjectId(id), isDeleted: { $ne: true } });
+        if (!existingUser) {
+            throw new Error('User not found or already deleted');
+        }
 
+        // If email is provided and different, check for uniqueness
+        if (updatedUser.email && updatedUser.email !== existingUser.email) {
+            const emailInUse = await userCollection.findOne({
+                email: updatedUser.email,
+                _id: { $ne: new ObjectId(id) },
+                isDeleted: { $ne: true }
+            });
+            if (emailInUse) {
+                throw new Error(`Email '${updatedUser.email}' is already in use by another user`);
+            }
+        }
+
+        // Set graduationYear for students
         updatedUser.graduationYear = updatedUser.accountType === "student" && updatedUser.graduationYear !== undefined ?
             (parseInt(updatedUser.graduationYear) || 2025) : null;
 
-        const result = await db.collection('user').updateOne(
-            { _id: new ObjectId(id) },
+        // Remove email from update if unchanged to avoid index issues
+        if (updatedUser.email === existingUser.email) {
+            delete updatedUser.email;
+        }
+
+        const result = await userCollection.updateOne(
+            { _id: new ObjectId(id), isDeleted: { $ne: true } },
             { $set: updatedUser },
             { returnDocument: 'after' }
         );

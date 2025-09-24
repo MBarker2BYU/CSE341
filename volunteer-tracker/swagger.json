@@ -136,7 +136,17 @@
             }
           },
           "400": {
-            "description": "Missing required fields",
+            "description": "Invalid data, e.g., duplicate email or invalid account type",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Missing required fields or invalid format (e.g., email, phone number)",
             "content": {
               "application/json": {
                 "schema": {
@@ -195,7 +205,7 @@
             }
           },
           "400": {
-            "description": "User ID is required",
+            "description": "Invalid user ID format",
             "content": {
               "application/json": {
                 "schema": {
@@ -272,7 +282,7 @@
             }
           },
           "400": {
-            "description": "Missing required fields",
+            "description": "Invalid data, e.g., duplicate email or invalid account type",
             "content": {
               "application/json": {
                 "schema": {
@@ -283,6 +293,16 @@
           },
           "404": {
             "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Missing required fields or invalid format (e.g., email, phone number)",
             "content": {
               "application/json": {
                 "schema": {
@@ -339,7 +359,17 @@
             }
           },
           "400": {
-            "description": "User ID is required",
+            "description": "Invalid user ID format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
             "content": {
               "application/json": {
                 "schema": {
@@ -446,7 +476,27 @@
             }
           },
           "400": {
-            "description": "Missing required fields",
+            "description": "Invalid data, e.g., invalid organizer ID or duplicate opportunity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Unauthorized, user is not an organizer or admin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Missing required fields or invalid format (e.g., date, time, duration)",
             "content": {
               "application/json": {
                 "schema": {
@@ -505,7 +555,7 @@
             }
           },
           "400": {
-            "description": "Opportunity ID is required",
+            "description": "Invalid opportunity ID format",
             "content": {
               "application/json": {
                 "schema": {
@@ -582,7 +632,37 @@
             }
           },
           "400": {
-            "description": "Missing required fields",
+            "description": "Invalid data, e.g., invalid organizer ID or duplicate opportunity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Unauthorized, user is not an organizer or admin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Opportunity not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Missing required fields or invalid format (e.g., date, time, duration)",
             "content": {
               "application/json": {
                 "schema": {
@@ -639,7 +719,7 @@
             }
           },
           "400": {
-            "description": "Opportunity ID is required",
+            "description": "Invalid opportunity ID format",
             "content": {
               "application/json": {
                 "schema": {
@@ -711,7 +791,7 @@
             }
           },
           "400": {
-            "description": "User ID is required",
+            "description": "Invalid user ID format",
             "content": {
               "application/json": {
                 "schema": {
@@ -789,7 +869,17 @@
             }
           },
           "400": {
-            "description": "User ID and Opportunity ID are required",
+            "description": "Invalid user ID or opportunity ID format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Missing required path parameters (userId or opportunityId)",
             "content": {
               "application/json": {
                 "schema": {
@@ -855,7 +945,17 @@
             }
           },
           "400": {
-            "description": "User ID and hours are required",
+            "description": "Invalid user ID or user opportunity ID format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Missing required path parameters (userId or userOpportunityId)",
             "content": {
               "application/json": {
                 "schema": {
@@ -931,7 +1031,7 @@
             }
           },
           "400": {
-            "description": "Invalid or missing userOpportunityId",
+            "description": "Invalid userOpportunityId format",
             "content": {
               "application/json": {
                 "schema": {
@@ -942,6 +1042,16 @@
           },
           "404": {
             "description": "Signup record not found or already withdrawn",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Missing required userOpportunityId",
             "content": {
               "application/json": {
                 "schema": {

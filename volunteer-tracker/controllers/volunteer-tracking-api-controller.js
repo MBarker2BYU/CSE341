@@ -95,19 +95,19 @@ exports.createUser = async (req, res) => {
         const {firstName, lastName, email, phoneNumber, accountType} = req.body;
 
         if (!firstName || !lastName || !email || !phoneNumber || !accountType) {
-            return formattedResponse(res, 400, 'All fields are required', { message: 'Missing required fields' });
+            return formattedResponse(res, 422, 'All fields are required', { message: 'Missing required fields' });
         }
         
         if (!isValidEmail(email)) {
-            return formattedResponse(res, 400, 'Invalid email format', { message: 'Email must be a valid email address' });
+            return formattedResponse(res, 422, 'Invalid email format', { message: 'Email must be a valid email address' });
         }
                 
         if (!isValidPhoneNumber(phoneNumber)) {
-            return formattedResponse(res, 400, 'Invalid phone number format', { message: 'Phone number must be in valid E.164 format' });
+            return formattedResponse(res, 422, 'Invalid phone number format', { message: 'Phone number must be in valid E.164 format' });
         }
 
         if (!isValidAccountType(accountType)) {
-            return formattedResponse(res, 400, 'Invalid account type', { message: 'Account type must be one of student, organizer, admin' });
+            return formattedResponse(res, 422, 'Invalid account type', { message: 'Account type must be one of student, organizer, admin' });
         }
 
         const newUser = await volunteerModel.createUser(req.body);
@@ -120,9 +120,10 @@ exports.createUser = async (req, res) => {
 
     } catch (error) {
 
-        console.error('Error creating user:', JSON.stringify(error.errInfo.details, null, 2));        
+        if(error.errInfo !== undefined && error.errInfo.details !== undefined && error.errInfo.details.length > 0) 
+            {console.error('Error creating user:', JSON.stringify(error.errInfo.details, null, 2));}
 
-        return formattedErrorResponse(res, 500, 'Failed to create user', error);
+        return formattedErrorResponse(res, error.statusCode || 500, 'Failed to create user', error);
 
     }
 };
@@ -140,19 +141,19 @@ exports.updateUser = async (req, res) => {
         const {firstName, lastName, email, phoneNumber, accountType} = req.body;
 
         if (!firstName || !lastName || !email || !phoneNumber || !accountType) {
-            return formattedResponse(res, 400, 'All fields are required', { message: 'Missing required fields' });
+            return formattedResponse(res, 422, 'All fields are required', { message: 'Missing required fields' });
         }
         
         if (!isValidEmail(email)) {
-            return formattedResponse(res, 400, 'Invalid email format', { message: 'Email must be a valid email address' });
+            return formattedResponse(res, 422, 'Invalid email format', { message: 'Email must be a valid email address' });
         }
                 
         if (!isValidPhoneNumber(phoneNumber)) {
-            return formattedResponse(res, 400, 'Invalid phone number format', { message: 'Phone number must be in valid E.164 format' });
+            return formattedResponse(res, 422, 'Invalid phone number format', { message: 'Phone number must be in valid E.164 format' });
         }
 
         if (!isValidAccountType(accountType)) {
-            return formattedResponse(res, 400, 'Invalid account type', { message: 'Account type must be one of student, organizer, admin' });
+            return formattedResponse(res, 422, 'Invalid account type', { message: 'Account type must be one of student, organizer, admin' });
         }
 
         const updatedUser = await volunteerModel.updateUser(userId, req.body);
@@ -180,7 +181,7 @@ exports.deleteUser = async (req, res) => {
         const userId = req.params.id;
 
         if (!userId) {
-            return formattedResponse(res, 400, 'User ID is required', { message: 'Missing user ID in request parameters' });
+            return formattedResponse(res, 422, 'User ID is required', { message: 'Missing user ID in request parameters' });
         }
 
         const result = await volunteerModel.deleteUser(userId);
@@ -233,7 +234,7 @@ exports.getOpportunityById = async (req, res) => {
         const opportunityId = req.params.id;
 
         if (!opportunityId) {
-            return formattedResponse(res, 400, 'Opportunity ID is required', { message: 'Missing opportunity ID in request parameters' });
+            return formattedResponse(res, 422, 'Opportunity ID is required', { message: 'Missing opportunity ID in request parameters' });
         }
 
         const opportunity = await volunteerModel.getOpportunityById(opportunityId);
@@ -280,23 +281,24 @@ exports.createOpportunity = async (req, res) => {
         const { organizerId, title, description, location, date, time, duration } = req.body;
 
         if (!organizerId || !title || !description || !location || !date || !time || !duration ) {
-            return formattedResponse(res, 400, 'All fields are required', { message: 'Missing required fields' });
+            return formattedResponse(res, 422, 'All fields are required', { message: 'Missing required fields' });
         }
 
+        // Authorization check: Ensure the user is an organizer or admin in part 2 of the project
         if(!await isAuthorized(organizerId, 'organizer')) {
             return formattedResponse(res, 403, 'Unauthorized', { message: 'User is not authorized to create opportunities' });
         }
 
         if (!isValidDate(date)) {
-            return formattedResponse(res, 400, 'Invalid date format', { message: 'Date must be in YYYY-MM-DD format' });
+            return formattedResponse(res, 422, 'Invalid date format', { message: 'Date must be in YYYY-MM-DD format' });
         }
 
         if (!isValidTime(time)) {
-            return formattedResponse(res, 400, 'Invalid time format', { message: 'Time must be in HH:MM 24-hour format' });
+            return formattedResponse(res, 422, 'Invalid time format', { message: 'Time must be in HH:MM 24-hour format' });
         }
 
         if (!isValidDuration(duration)) {
-            return formattedResponse(res, 400, 'Invalid duration', { message: 'Duration must be a non-negative number' });
+            return formattedResponse(res, 422, 'Invalid duration', { message: 'Duration must be a non-negative number' });
         }
 
         const newOpportunity = await volunteerModel.createOpportunity(req.body);
@@ -328,23 +330,24 @@ exports.updateOpportunity = async (req, res) => {
         const { organizerId, title, description, location, date, time, duration } = req.body;
 
         if (!organizerId || !title || !description || !location || !date || !time || !duration ) {
-            return formattedResponse(res, 400, 'All fields are required', { message: 'Missing required fields' });
+            return formattedResponse(res, 422, 'All fields are required', { message: 'Missing required fields' });
         }
 
+        // Authorization check: Ensure the user is an organizer or admin in part 2 of the project
         if(!await isAuthorized(organizerId, 'organizer')) {
             return formattedResponse(res, 403, 'Unauthorized', { message: 'User is not authorized to update opportunities' });
         }
 
         if (!isValidDate(date)) {
-            return formattedResponse(res, 400, 'Invalid date format', { message: 'Date must be in YYYY-MM-DD format' });
+            return formattedResponse(res, 422, 'Invalid date format', { message: 'Date must be in YYYY-MM-DD format' });
         }
 
         if (!isValidTime(time)) {
-            return formattedResponse(res, 400, 'Invalid time format', { message: 'Time must be in HH:MM 24-hour format' });
+            return formattedResponse(res, 422, 'Invalid time format', { message: 'Time must be in HH:MM 24-hour format' });
         }
 
         if (!isValidDuration(duration)) {
-            return formattedResponse(res, 400, 'Invalid duration', { message: 'Duration must be a non-negative number' });
+            return formattedResponse(res, 422, 'Invalid duration', { message: 'Duration must be a non-negative number' });
         }
 
         const updatedOpportunity = await volunteerModel.updateOpportunity(opportunityId,req.body);
@@ -374,7 +377,7 @@ exports.deleteOpportunity = async (req, res) => {
         const opportunityId = req.params.id;
 
         if (!opportunityId) {
-            return formattedResponse(res, 400, 'Opportunity ID is required', { message: 'Missing opportunity ID in request parameters' });
+            return formattedResponse(res, 422, 'Opportunity ID is required', { message: 'Missing opportunity ID in request parameters' });
         }
 
         const deletedOpportunity = await volunteerModel.deleteOpportunity(opportunityId);
@@ -404,7 +407,7 @@ exports.getUserOpportunities = async (req, res) => {
         const userId = req.params.userId;   
 
         if (!userId) {
-            return formattedResponse(res, 400, 'User ID is required', { message: 'Missing user ID in request parameters' });
+            return formattedResponse(res, 422, 'User ID is required', { message: 'Missing user ID in request parameters' });
         }
 
         const opportunities = await volunteerModel.getUserOpportunities(userId);
@@ -433,7 +436,7 @@ exports.signUpForOpportunity = async (req, res) => {
         const { userId, opportunityId } = req.params;
         
         if (!userId || !opportunityId) {
-            return formattedResponse(res, 400, 'User ID and Opportunity ID are required', { message: 'Missing required fields' });
+            return formattedResponse(res, 422, 'User ID and Opportunity ID are required', { message: 'Missing required fields' });
         }
 
         const signUpResult = await volunteerModel.signUpForOpportunity(userId, opportunityId);
@@ -463,7 +466,7 @@ exports.withdrawFromOpportunity = async (req, res) => {
         const userOpportunityId = req.params.userOpportunityId;
 
         if (!userOpportunityId) {
-            return formattedResponse(res, 400, 'User Opportunity ID is required', { message: 'Missing required fields' });
+            return formattedResponse(res, 422, 'User Opportunity ID is required', { message: 'Missing required fields' });
         }
 
         const withdrawResult = await volunteerModel.withdrawFromOpportunity(userOpportunityId);
@@ -492,7 +495,7 @@ exports.approveHours = async (req, res) => {
         
 
         if (!userId || !userOpportunityId) {
-            return formattedResponse(res, 400, 'User ID and Opportunity ID are required', { message: 'Missing required fields' });
+            return formattedResponse(res, 422, 'User ID and Opportunity ID are required', { message: 'Missing required fields' });
         }
 
         const approvalResult = await volunteerModel.approveHours(userId, userOpportunityId);
