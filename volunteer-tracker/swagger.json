@@ -1,0 +1,1130 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Volunteer Tracking API",
+    "description": "API for managing volunteers and opportunities, with a default welcome endpoint.",
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "default",
+      "description": "Default API operations from default-controller"
+    },
+    {
+      "name": "Volunteer Tracking API",
+      "description": "Volunteer management operations from volunteer-tracking-api-controller"
+    }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "tags": ["default"],
+        "summary": "Welcome message",
+        "description": "Returns a welcome message indicating the Volunteer Tracker API is running and the database connection status.",
+        "responses": {
+          "200": {
+            "description": "API is running and database is connected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Volunteer Tracker API is running! - Database 'volunteerDB' connected and ready!"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Database connection error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users": {
+      "get": {
+        "tags": ["Volunteer Tracking API"],
+        "summary": "Get all users",
+        "description": "Retrieves a list of all users in the system.",
+        "responses": {
+          "200": {
+            "description": "Users fetched successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Users fetched successfully"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/User"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No users found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to fetch users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Volunteer Tracking API"],
+        "summary": "Create a new user",
+        "description": "Creates a new user with the provided details.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "User created successfully"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/User"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing required fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to create user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/{id}": {
+      "get": {
+        "tags": ["Volunteer Tracking API"],
+        "summary": "Get user by ID",
+        "description": "Retrieves a user by their ID.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the user to retrieve"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User fetched successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "User fetched successfully"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/User"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "User ID is required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to fetch user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Volunteer Tracking API"],
+        "summary": "Update a user",
+        "description": "Updates an existing user with the provided details.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the user to update"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "User updated successfully"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/User"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing required fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to update user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Volunteer Tracking API"],
+        "summary": "Delete a user",
+        "description": "Deletes a user by their ID.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the user to delete"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "User deleted successfully"
+                    },
+                    "data": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "User ID is required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to delete user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/opportunities": {
+      "get": {
+        "tags": ["Volunteer Tracking API"],
+        "summary": "Get all opportunities",
+        "description": "Retrieves a list of all opportunities in the system.",
+        "responses": {
+          "200": {
+            "description": "Opportunities fetched successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Opportunities fetched successfully"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Opportunity"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No opportunities found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to fetch opportunities",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Volunteer Tracking API"],
+        "summary": "Create a new opportunity",
+        "description": "Creates a new opportunity with the provided details.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OpportunityInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Opportunity created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Opportunity created successfully"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Opportunity"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing required fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to create opportunity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/opportunities/{id}": {
+      "get": {
+        "tags": ["Volunteer Tracking API"],
+        "summary": "Get opportunity by ID",
+        "description": "Retrieves an opportunity by its ID.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the opportunity to retrieve"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Opportunity fetched successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Opportunity fetched successfully"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Opportunity"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Opportunity ID is required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Opportunity not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to fetch opportunity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Volunteer Tracking API"],
+        "summary": "Update an opportunity",
+        "description": "Updates an existing opportunity with the provided details.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the opportunity to update"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OpportunityInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Opportunity updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Opportunity updated successfully"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Opportunity"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing required fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to update opportunity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Volunteer Tracking API"],
+        "summary": "Delete an opportunity",
+        "description": "Deletes an opportunity by its ID.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the opportunity to delete"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Opportunity deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Opportunity deleted successfully"
+                    },
+                    "data": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Opportunity ID is required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Opportunity not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to delete opportunity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/events/{userId}/opportunities": {
+      "get": {
+        "tags": ["Volunteer Tracking API"],
+        "summary": "Get user opportunities",
+        "description": "Retrieves all opportunities associated with a user by their ID.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the user"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User opportunities fetched successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "User opportunities fetched successfully"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/UserOpportunity"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "User ID is required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No opportunities found for user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to fetch user opportunities",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/events/{userId}/opportunities/{OpportunityId}": {
+      "post": {
+        "tags": ["Volunteer Tracking API"],
+        "summary": "Sign up for an opportunity",
+        "description": "Signs a user up for an opportunity using their IDs.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the user"
+          },
+          {
+            "in": "path",
+            "name": "OpportunityId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the opportunity"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully signed up for opportunity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Successfully signed up for opportunity"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/UserOpportunity"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "User ID and Opportunity ID are required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to sign up for opportunity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Volunteer Tracking API"],
+        "summary": "Approve volunteered hours",
+        "description": "Approves volunteered hours for a user for a specific opportunity.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the approving user"
+          },
+          {
+            "in": "path",
+            "name": "userOpportunityId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the user opportunity"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully approved hours",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Successfully approved hours"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/UserOpportunity"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "User ID and hours are required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to approve hours",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/events/{userOpportunityId}": {
+      "delete": {
+        "tags": ["Volunteer Tracking API"],
+        "summary": "Withdraw from an opportunity",
+        "description": "Withdraws a user from an opportunity by setting `isDeleted` to `true` (soft delete) using the signup ID.",
+        "operationId": "withdrawFromOpportunity",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userOpportunityId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F]{24}$",
+              "example": "68d34d1878ec6191bff232c0"
+            },
+            "description": "The ID of the signup record (MongoDB ObjectId) for the user-opportunity pair"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully withdrew from opportunity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Successfully withdrew from opportunity"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "matchedCount": {
+                          "type": "integer",
+                          "example": 1,
+                          "description": "Number of documents matched by the query"
+                        },
+                        "modifiedCount": {
+                          "type": "integer",
+                          "example": 1,
+                          "description": "Number of documents updated (typically 1 for a successful soft delete)"
+                        }
+                      },
+                      "required": ["matchedCount", "modifiedCount"]
+                    }
+                  },
+                  "required": ["message", "data"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or missing userOpportunityId",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Signup record not found or already withdrawn",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error, e.g., schema validation failure or database issue",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "phoneNumber": { 
+            "type": "string",
+            "pattern": "^\\(?[0-9]{3}\\)?[0-9]{3}-?[0-9]{4}$|^[0-9]{3}\\.[0-9]{3}\\.[0-9]{4}$",
+            "description": "Must be (123)456-7890, 1234567890, or 123.456.7890"
+          },
+          "accountType": { 
+            "type": "string",
+            "enum": ["student", "admin", "organizer"],
+            "description": "Must be one of student, admin, or organizer"
+          },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "isDeleted": { "type": "boolean" },
+          "graduationYear": { "type": "integer", "nullable": true }
+        },
+        "required": ["firstName", "lastName", "email", "phoneNumber", "accountType", "createdAt", "isDeleted"]
+      },
+      "UserInput": {
+        "type": "object",
+        "properties": {
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "phoneNumber": { 
+            "type": "string",
+            "pattern": "^\\(?[0-9]{3}\\)?[0-9]{3}-?[0-9]{4}$|^[0-9]{3}\\.[0-9]{3}\\.[0-9]{4}$",
+            "description": "Must be (123)456-7890, 1234567890, or 123.456.7890"
+          },
+          "accountType": { 
+            "type": "string",
+            "enum": ["student", "admin", "organizer"],
+            "description": "Must be one of student, admin, or organizer"
+          },
+          "graduationYear": { 
+            "type": "integer", 
+            "nullable": true,
+            "description": "Optional integer year, required for students, between 1900 and 2035"
+          }
+        },
+        "required": ["firstName", "lastName", "email", "phoneNumber", "accountType"]
+      },
+      "Opportunity": {
+        "type": "object",
+        "properties": {
+          "organizerId": { 
+            "type": "string",
+            "description": "MongoDB ObjectId referencing the organizer user"
+          },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "location": { "type": "string" },
+          "date": { 
+            "type": "string", 
+            "format": "date",
+            "description": "ISO 8601 date string (e.g., YYYY-MM-DD)"
+          },
+          "time": { 
+            "type": "string",
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+            "description": "Time in HH:MM 24-hour format"
+          },
+          "duration": { 
+            "type": "number",
+            "minimum": 0,
+            "description": "Duration in hours, must be non-negative"
+          },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "isDeleted": { "type": "boolean" },
+          "deleteDate": { 
+            "type": "string", 
+            "format": "date-time",
+            "nullable": true,
+            "description": "Date of soft deletion, null if not deleted"
+          }
+        },
+        "required": ["organizerId", "title", "description", "location", "date", "time", "duration", "createdAt", "isDeleted"]
+      },
+      "OpportunityInput": {
+        "type": "object",
+        "properties": {
+          "organizerId": { 
+            "type": "string",
+            "description": "MongoDB ObjectId referencing the organizer user"
+          },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "location": { "type": "string" },
+          "date": { 
+            "type": "string", 
+            "format": "date",
+            "description": "ISO 8601 date string (e.g., YYYY-MM-DD)"
+          },
+          "time": { 
+            "type": "string",
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+            "description": "Time in HH:MM 24-hour format"
+          },
+          "duration": { 
+            "type": "number",
+            "minimum": 0,
+            "description": "Duration in hours, must be non-negative"
+          }
+        },
+        "required": ["organizerId", "title", "description", "location", "date", "time", "duration"]
+      },
+      "UserOpportunity": {
+        "type": "object",
+        "properties": {
+          "userId": { 
+            "type": "string",
+            "description": "MongoDB ObjectId referencing the user"
+          },
+          "opportunityId": { 
+            "type": "string",
+            "description": "MongoDB ObjectId referencing the opportunity"
+          },
+          "createdAt": { 
+            "type": "string", 
+            "format": "date-time",
+            "description": "Date the user signed up for the opportunity"
+          },
+          "isDeleted": { 
+            "type": "boolean",
+            "description": "Indicates if the signup is soft-deleted"
+          },
+          "deleteDate": { 
+            "type": "string", 
+            "format": "date-time",
+            "nullable": true,
+            "description": "Date of soft deletion, null if not deleted"
+          },
+          "approvedBy": { 
+            "type": "string", 
+            "nullable": true,
+            "description": "MongoDB ObjectId of the user who approved the hours, null if not approved"
+          },
+          "approvedOn": { 
+            "type": "string", 
+            "format": "date-time",
+            "nullable": true,
+            "description": "Date the hours were approved, null if not approved"
+          }
+        },
+        "required": ["userId", "opportunityId", "createdAt", "isDeleted"]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "message": { "type": "string" },
+          "error": { "type": "string" }
+        },
+        "required": ["message", "error"]
+      }
+    }
+  }
+}

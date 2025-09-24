@@ -2,6 +2,7 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const { MongoClient } = require('mongodb');
+const { connectionAndPing, createDatabase, verifyDatabase } = require('../database/database');
 
 let client = null;
 let database = null;
@@ -36,21 +37,22 @@ exports.initdb = async (callback, databaseName, connectTimeoutMS = 30000,
             throw new Error('MONGODB_URI is not defined in environment variables');
         }
 
-        // Connect to MongoDB
-        client = await MongoClient.connect(process.env.MONGODB_URI, {
-            connectTimeoutMS,
-            maxPoolSize,
-            serverSelectionTimeoutMS
-        });        
+        client = await connectionAndPing(process.env.MONGODB_URI, connectTimeoutMS,
+            maxPoolSize, serverSelectionTimeoutMS);
 
-        // Initialize the database with the provided name
-        database = client.db(databaseName);
+        const dbExists = await verifyDatabase(client, databaseName);
 
-        // Verify connection by pinging the database
-        await database.command({ ping: 1 });
-        console.log(`Connected to MongoDB database: ${databaseName}`);
+        if (!dbExists) {
 
-        // Return the database instance via callback
+            database = createDatabase(client, databaseName);
+            console.log(`Database '${databaseName}' created successfully.`);
+        }
+        else {
+        
+            database = client.db(databaseName);
+            console.log(`Database '${databaseName}' already exists.`);
+        }
+        
         callback(null, database);
 
     } catch (err) {
@@ -91,3 +93,21 @@ exports.close = async () => {
         throw err; // Re-throw the error for further handling if needed
     }
 };
+
+exports.checkValidator = async (database) => {
+  try {
+
+    const collection = await database.getDatabase().collection('user'); // Target the user collection
+    const options = await collection.options(); // Get collection options
+    console.log("Collection: user");
+    if (options.validator) {
+      console.log("Validator:", JSON.stringify(options.validator, null, 2));
+      console.log("Validation Action:", options.validationAction);
+    } else {
+      console.log("No validator set for this collection.");
+    }
+  } catch (error) {
+    console.error("Error checking collection:", error);
+  }
+}
+
