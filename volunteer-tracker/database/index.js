@@ -62,7 +62,7 @@ exports.initdb = async (callback, databaseName, connectTimeoutMS = 30000,
 };
 
 // Get the database instance
-exports.getDatabase = () => {
+exports.getDatabase = async () => {
 
     // If database is not initialized, throw an error
     if (!database) {
