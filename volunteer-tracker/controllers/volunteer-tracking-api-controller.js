@@ -67,7 +67,7 @@ function isValidEmail(email) {
 
 // Validates US phone numbers in various formats
 function isValidPhoneNumber(phoneNumber) {
-    const phoneRegex = /^\(?[0-9]{3}\)?[0-9]{3}-?[0-9]{4}$|^[0-9]{3}\.[0-9]{3}\.[0-9]{4}$/;
+    const phoneRegex = /^\(?[0-9]{3}\)?[-.]?[0-9]{3}[-.]?[0-9]{4}$/;
     return phoneRegex.test(phoneNumber);
 }
 
@@ -75,6 +75,14 @@ function isValidPhoneNumber(phoneNumber) {
 function isValidAccountType(accountType) {
     return ['student', 'organizer', 'admin'].includes(accountType);
 }
+
+// OAuth Support
+function isStrongPassword(password) {
+    // At least 12 characters, one uppercase, one lowercase, one number, one special character
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{12,}$/;
+    return passwordRegex.test(password);
+}
+
 
 exports.createUser = async (req, res) => {
     
@@ -275,6 +283,10 @@ exports.createOpportunity = async (req, res) => {
             return formattedResponse(res, 400, 'All fields are required', { message: 'Missing required fields' });
         }
 
+        if(!await isAuthorized(organizerId, 'organizer')) {
+            return formattedResponse(res, 403, 'Unauthorized', { message: 'User is not authorized to create opportunities' });
+        }
+
         if (!isValidDate(date)) {
             return formattedResponse(res, 400, 'Invalid date format', { message: 'Date must be in YYYY-MM-DD format' });
         }
@@ -317,6 +329,10 @@ exports.updateOpportunity = async (req, res) => {
 
         if (!organizerId || !title || !description || !location || !date || !time || !duration ) {
             return formattedResponse(res, 400, 'All fields are required', { message: 'Missing required fields' });
+        }
+
+        if(!await isAuthorized(organizerId, 'organizer')) {
+            return formattedResponse(res, 403, 'Unauthorized', { message: 'User is not authorized to update opportunities' });
         }
 
         if (!isValidDate(date)) {
@@ -502,4 +518,22 @@ function formattedResponse(res, code, message, data) {
 function formattedErrorResponse(res, code, message, error) {
     res.setHeader('Content-Type', 'application/json');  
     return res.status(code).json({ message: message, error: error.message });
+}
+
+// Authorization helper function
+async function isAuthorized(userId, requiredUserRole) {
+
+    return true; // Temporary bypass for authorization checks
+
+    // const user = await volunteerModel.getUserById(userId);
+
+    // if (!user) {
+    //     throw new Error('User not found');
+    // }
+
+    // if (user.accountType === 'admin') {
+    //     return true;
+    // }
+    
+    // return user.accountType === requiredUserRole;
 }
