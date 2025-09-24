@@ -7,10 +7,12 @@ exports.getAllUsers = async () => {
 
     try {
 
-    // Execute find exclude soft deleted users using isDeleted field
-    const users = await database.getDatabase().collection('user').find({ isDeleted: { $ne: true } }).toArray();
+        const db = await database.getDatabase();
 
-    return users;
+        // Execute find exclude soft deleted users using isDeleted field
+        const users = await db.collection('user').find({ isDeleted: { $ne: true } }).toArray();
+
+        return users;
 
     } catch (error) {
 
@@ -23,9 +25,11 @@ exports.getAllUsers = async () => {
 exports.getUserById = async (userId) => {
 
     try {
-        
+
+        const db = await database.getDatabase();
+
         // Get user collection
-        const userCollection = database.getDatabase().collection('user');
+        const userCollection = db.collection('user');
         // Find user by ID exclude soft deleted users using isDeleted field
         const user = await userCollection.findOne({ _id: new ObjectId(userId), isDeleted: { $ne: true } });
         // If no user found, return null
@@ -44,11 +48,13 @@ exports.createUser = async (newUser) => {
 
     try {
 
-        const result = await database.getDatabase().collection('user').insertOne({
+        const db = await database.getDatabase();
+
+        const result = await db.collection('user').insertOne({
             firstName: newUser.firstName,
             lastName: newUser.lastName,
             email: newUser.email,
-            phoneNumber: newUser.phoneNumber,            
+            phoneNumber: newUser.phoneNumber,
             accountType: newUser.accountType,
             createdAt: new Date(),
             isDeleted: false,
@@ -67,13 +73,15 @@ exports.createUser = async (newUser) => {
 }
 
 exports.updateUser = async (id, updatedUser) => {
-    
+
     try {
-        
-        updatedUser.graduationYear = updatedUser.accountType === "student" && updatedUser.graduationYear !== undefined ? 
+
+        const db = await database.getDatabase();
+
+        updatedUser.graduationYear = updatedUser.accountType === "student" && updatedUser.graduationYear !== undefined ?
             (parseInt(updatedUser.graduationYear) || 2025) : null;
 
-        const result = await database.getDatabase().collection('user').updateOne(
+        const result = await db.collection('user').updateOne(
             { _id: new ObjectId(id) },
             { $set: updatedUser },
             { returnDocument: 'after' }
@@ -82,7 +90,7 @@ exports.updateUser = async (id, updatedUser) => {
         return result;
 
     } catch (error) {
-        
+
         console.error('Error updating user:', error);
         throw error; // Let the controller handle the error
 
@@ -92,10 +100,12 @@ exports.updateUser = async (id, updatedUser) => {
 
 // Soft delete user by ID
 exports.deleteUser = async (id) => {
-    
+
     try {
 
-        const result = await database.getDatabase().collection('user').updateOne(
+        const db = await database.getDatabase();
+
+        const result = await db.collection('user').updateOne(
             { _id: new ObjectId(id) },
             { $set: { deletedAt: new Date(), isDeleted: true } }
         );
@@ -113,12 +123,14 @@ exports.deleteUser = async (id) => {
 
 // Opportunity related functions (placeholders for now)
 exports.getAllOpportunities = async () => {
-        try {
+    try {
 
-    // Execute find exclude soft deleted opportunities using isDeleted field
-    const opportunities = await database.getDatabase().collection('opportunity').find({ isDeleted: { $ne: true } }).toArray();
+        const db = await database.getDatabase();
 
-    return opportunities;
+        // Execute find exclude soft deleted opportunities using isDeleted field
+        const opportunities = await db.collection('opportunity').find({ isDeleted: { $ne: true } }).toArray();
+
+        return opportunities;
 
     } catch (error) {
 
@@ -128,11 +140,11 @@ exports.getAllOpportunities = async () => {
 }
 
 exports.getOpportunityById = async (opportunityId) => {
-        
-        try {
-        
+
+    try {
+        const db = await database.getDatabase();
         // Get opportunity collection
-        const opportunityCollection = database.getDatabase().collection('opportunity');
+        const opportunityCollection = db.collection('opportunity');
         // Find opportunity by ID exclude soft deleted opportunities using isDeleted field
         const opportunity = await opportunityCollection.findOne({ _id: new ObjectId(opportunityId), isDeleted: { $ne: true } });
         // If no opportunity found, return null
@@ -147,10 +159,11 @@ exports.getOpportunityById = async (opportunityId) => {
 }
 
 exports.createOpportunity = async (newOpportunity) => {
-        
+
     try {
-                
-        const result = await database.getDatabase().collection('opportunity').insertOne({
+        const db = await database.getDatabase();
+
+        const result = await db.collection('opportunity').insertOne({
             organizerId: new ObjectId(newOpportunity.organizerId),
             title: newOpportunity.title,
             description: newOpportunity.description,
@@ -175,17 +188,21 @@ exports.createOpportunity = async (newOpportunity) => {
 exports.updateOpportunity = async (id, updatedOpportunity) => {
     try {
 
-        const result = await database.getDatabase().collection('opportunity').updateOne(
+        const db = await database.getDatabase();
+
+        const result = await db.collection('opportunity').updateOne(
             { _id: new ObjectId(id) },
-            { $set: {
-                organizerId: new ObjectId(updatedOpportunity.organizerId),
-                title: updatedOpportunity.title,
-                description: updatedOpportunity.description,
-                location: updatedOpportunity.location,
-                date: new Date(updatedOpportunity.date),
-                time: updatedOpportunity.time,
-                duration: new Double(updatedOpportunity.duration)
-            } },
+            {
+                $set: {
+                    organizerId: new ObjectId(updatedOpportunity.organizerId),
+                    title: updatedOpportunity.title,
+                    description: updatedOpportunity.description,
+                    location: updatedOpportunity.location,
+                    date: new Date(updatedOpportunity.date),
+                    time: updatedOpportunity.time,
+                    duration: new Double(updatedOpportunity.duration)
+                }
+            },
             { returnDocument: 'after' }
         );
 
@@ -204,7 +221,9 @@ exports.deleteOpportunity = async (id) => {
 
     try {
 
-        const result = await database.getDatabase().collection('opportunity').updateOne(
+        const db = await database.getDatabase();
+
+        const result = await db.collection('opportunity').updateOne(
             { _id: new ObjectId(id) },
             { $set: { deletedAt: new Date(), isDeleted: true } }
         );
@@ -217,15 +236,17 @@ exports.deleteOpportunity = async (id) => {
         throw error; // Let the controller handle the error
 
     }
-}        
+}
 
 
 exports.getUserOpportunities = async (userId) => {
 
     try {
 
+        const db = await database.getDatabase();
+
         // Execute find exclude soft deleted user opportunities using isDeleted field
-        const opportunities = await database.getDatabase().collection('userOpportunities').find({ userId: new ObjectId(userId), isDeleted: { $ne: true } }).toArray();
+        const opportunities = await db.collection('userOpportunities').find({ userId: new ObjectId(userId), isDeleted: { $ne: true } }).toArray();
         return opportunities;
 
     } catch (error) {
@@ -238,10 +259,12 @@ exports.getUserOpportunities = async (userId) => {
 }
 
 exports.signUpForOpportunity = async (userId, opportunityId) => {
-        
+
     try {
 
-        const result = await database.getDatabase().collection('userOpportunities').insertOne({
+        const db = await database.getDatabase();
+
+        const result = await db.collection('userOpportunities').insertOne({
             userId: new ObjectId(userId),
             opportunityId: new ObjectId(opportunityId),
             createdAt: new Date(),
@@ -267,7 +290,9 @@ exports.withdrawFromOpportunity = async (userOpportunityId) => {
 
     try {
 
-        const result = await database.getDatabase().collection('userOpportunities').updateOne(
+        const db = await database.getDatabase();
+
+        const result = await db.collection('userOpportunities').updateOne(
             { _id: new ObjectId(userOpportunityId) },
             { $set: { deletedAt: new Date(), isDeleted: true } }
         );
@@ -279,25 +304,29 @@ exports.withdrawFromOpportunity = async (userOpportunityId) => {
         console.error('Error withdrawing from opportunity:', error);
         throw error; // Let the controller handle the error
 
-    }       
+    }
 
 }
-       
+
 
 exports.approveHours = async (approvedById, userOpportunityId) => {
-``
+    ``
     try {
-        
-        if (!approvedById || !userOpportunityId ) {
-            throw new Error('Missing required fields');
-        }   
 
-        const result = await database.getDatabase().collection('userOpportunities').updateOne(
+        const db = await database.getDatabase();
+
+        if (!approvedById || !userOpportunityId) {
+            throw new Error('Missing required fields');
+        }
+
+        const result = await db.collection('userOpportunities').updateOne(
             { _id: new ObjectId(userOpportunityId) },
-            { $set: {
-                approvedBy: new ObjectId(approvedById),
-                approvedOn: new Date()
-            } }
+            {
+                $set: {
+                    approvedBy: new ObjectId(approvedById),
+                    approvedOn: new Date()
+                }
+            }
         );
 
         return result;

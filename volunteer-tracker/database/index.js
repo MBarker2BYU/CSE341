@@ -44,7 +44,7 @@ exports.initdb = async (callback, databaseName, connectTimeoutMS = 30000,
 
         if (!dbExists) {
 
-            database = createDatabase(client, databaseName);
+            database = await createDatabase(client, databaseName);
             console.log(`Database '${databaseName}' created successfully.`);
         }
         else {
@@ -52,7 +52,8 @@ exports.initdb = async (callback, databaseName, connectTimeoutMS = 30000,
             database = client.db(databaseName);
             console.log(`Database '${databaseName}' already exists.`);
         }
-        
+
+
         callback(null, database);
 
     } catch (err) {
@@ -62,7 +63,7 @@ exports.initdb = async (callback, databaseName, connectTimeoutMS = 30000,
 };
 
 // Get the database instance
-exports.getDatabase = async () => {
+exports.getDatabase = () => {
 
     // If database is not initialized, throw an error
     if (!database) {
@@ -97,7 +98,7 @@ exports.close = async () => {
 exports.checkValidator = async (database) => {
   try {
 
-    const collection = await database.getDatabase().collection('user'); // Target the user collection
+    const collection = database.collection('user'); // Target the user collection
     const options = await collection.options(); // Get collection options
     console.log("Collection: user");
     if (options.validator) {
