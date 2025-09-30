@@ -125,7 +125,7 @@ exports.updateUser = async (id, updatedUser) => {
             { returnDocument: 'after', projection: { password: 0 } }
         );
 
-        return result.value;
+        return result;
     } catch (error) {
         console.error('Error updating user:', error);
         throw error;
