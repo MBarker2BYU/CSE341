@@ -2,29 +2,38 @@ const express = require('express');
 const app = express();
 const dotenv = require('dotenv');
 
+const passport = require('passport');
+
 const database = require('./database');
 
 const defaultRouter = require('./routes/default-routes');
 const volunteerApiRouter = require('./routes/volunteer-tracking-api-routes');
 const swaggerRouter = require('./routes/swagger-routes');
-
-const dbName = 'volunteer-db';
-const port = process.env.PORT || 8080;
+const authRouter = require('./routes/auth-routes');
 
 // Load environment variables from .env file
 // Ensure the path is correct if .env is not in the root directory
 dotenv.config({ path: __dirname + '/.env' });
 
+const dbName = process.env.DATABASE_NAME || 'volunteer-db';
+const port = process.env.PORT || 8080;
+
 // Debug: Log the MONGODB_URI to verify it's loaded correctly
 console.log('MONGODB_URI:', process.env.MONGODB_URI); // Debug
+console.log('JWT_SECRET:', process.env.JWT_SECRET);
 
 // Parse JSON bodies
 app.use(express.json());
+
+// Initialize Passport
+app.use(passport.initialize());
+require('./auth'); // Load Passport JWT strategy
 
 // Mount the default router
 app.use('/', defaultRouter);
 app.use('/api', volunteerApiRouter);
 app.use('/', swaggerRouter);
+app.use('/auth', authRouter);
 
 // Initialize database and start server
 // Ensure the database is initialized before starting the server

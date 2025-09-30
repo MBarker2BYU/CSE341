@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Volunteer Tracking API",
-    "description": "API for managing volunteers and opportunities, with a default welcome endpoint.",
+    "description": "API for managing volunteers and opportunities, with authentication and a default welcome endpoint.",
     "version": "1.0.0"
   },
   "tags": [
@@ -12,9 +12,173 @@
     },
     {
       "name": "Volunteer Tracking API",
-      "description": "Volunteer management operations from volunteer-tracking-api-controller"
+      "description": "Volunteer and opportunity management operations from volunteer-tracking-api-controller"
+    },
+    {
+      "name": "Authentication",
+      "description": "Authentication operations for user login and logout"
     }
   ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT token obtained from /auth/login, sent in Authorization header as 'Bearer <token>'"
+      }
+    },
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string", "description": "MongoDB ObjectId of the user" },
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "phoneNumber": {
+            "type": "string",
+            "pattern": "^\\(?[0-9]{3}\\)?[-.]?[0-9]{3}[-.]?[0-9]{4}$",
+            "description": "Must be (123)456-7890, 1234567890, 123-456-7890, or 123.456.7890"
+          },
+          "accountType": {
+            "type": "string",
+            "enum": ["student", "admin", "organizer"],
+            "description": "Must be one of student, admin, or organizer"
+          },
+          "graduationYear": {
+            "type": "integer",
+            "nullable": true,
+            "minimum": 1900,
+            "maximum": 2035,
+            "description": "Required for students, optional otherwise"
+          },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "isDeleted": { "type": "boolean" },
+          "deleteDate": { "type": "string", "format": "date-time", "nullable": true }
+        },
+        "required": ["_id", "firstName", "lastName", "email", "phoneNumber", "accountType", "createdAt", "isDeleted"]
+      },
+      "UserInput": {
+        "type": "object",
+        "properties": {
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "password": {
+            "type": "string",
+            "description": "Must be 12+ characters with 1 uppercase, 1 lowercase, 1 number, 1 special character (@$!%*?&). Required for POST, optional for PUT."
+          },
+          "phoneNumber": {
+            "type": "string",
+            "pattern": "^\\(?[0-9]{3}\\)?[-.]?[0-9]{3}[-.]?[0-9]{4}$",
+            "description": "Must be (123)456-7890, 1234567890, 123-456-7890, or 123.456.7890"
+          },
+          "accountType": {
+            "type": "string",
+            "enum": ["student", "admin", "organizer"],
+            "description": "Must be one of student, admin, or organizer"
+          },
+          "graduationYear": {
+            "type": "integer",
+            "nullable": true,
+            "minimum": 1900,
+            "maximum": 2035,
+            "description": "Required for students, optional otherwise"
+          }
+        },
+        "required": ["firstName", "lastName", "email", "phoneNumber", "accountType"]
+      },
+      "Opportunity": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string", "description": "MongoDB ObjectId of the opportunity" },
+          "organizerId": { "type": "string", "description": "MongoDB ObjectId referencing the organizer user" },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "location": { "type": "string" },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "description": "ISO 8601 date string (e.g., YYYY-MM-DD)"
+          },
+          "time": {
+            "type": "string",
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+            "description": "Time in HH:MM 24-hour format"
+          },
+          "duration": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Duration in hours, must be non-negative"
+          },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "isDeleted": { "type": "boolean" },
+          "deleteDate": { "type": "string", "format": "date-time", "nullable": true }
+        },
+        "required": ["_id", "organizerId", "title", "description", "location", "date", "time", "duration", "createdAt", "isDeleted"]
+      },
+      "OpportunityInput": {
+        "type": "object",
+        "properties": {
+          "organizerId": { "type": "string", "description": "MongoDB ObjectId referencing the organizer user" },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "location": { "type": "string" },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "description": "ISO 8601 date string (e.g., YYYY-MM-DD)"
+          },
+          "time": {
+            "type": "string",
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+            "description": "Time in HH:MM 24-hour format"
+          },
+          "duration": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Duration in hours, must be non-negative"
+          }
+        },
+        "required": ["organizerId", "title", "description", "location", "date", "time", "duration"]
+      },
+      "UserOpportunity": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string", "description": "MongoDB ObjectId of the user-opportunity record" },
+          "userId": { "type": "string", "description": "MongoDB ObjectId referencing the user" },
+          "opportunityId": { "type": "string", "description": "MongoDB ObjectId referencing the opportunity" },
+          "createdAt": { "type": "string", "format": "date-time", "description": "Date the user signed up for the opportunity" },
+          "isDeleted": { "type": "boolean", "description": "Indicates if the signup is soft-deleted" },
+          "deleteDate": { "type": "string", "format": "date-time", "nullable": true, "description": "Date of soft deletion, null if not deleted" },
+          "approvedBy": { "type": "string", "nullable": true, "description": "MongoDB ObjectId of the user who approved the hours, null if not approved" },
+          "approvedOn": { "type": "string", "format": "date-time", "nullable": true, "description": "Date the hours were approved, null if not approved" }
+        },
+        "required": ["_id", "userId", "opportunityId", "createdAt", "isDeleted"]
+      },
+      "LoginInput": {
+        "type": "object",
+        "properties": {
+          "email": { "type": "string", "format": "email", "example": "alice.johnson@example.com" },
+          "password": {
+            "type": "string",
+            "description": "Must be 12+ characters with 1 uppercase, 1 lowercase, 1 number, 1 special character (@$!%*?&)",
+            "example": "Password123!"
+          }
+        },
+        "required": ["email", "password"]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "message": { "type": "string", "example": "Error message" },
+          "error": { "type": "string", "example": "Detailed error description" }
+        },
+        "required": ["message", "error"]
+      }
+    }
+  },
   "paths": {
     "/": {
       "get": {
@@ -42,8 +206,94 @@
             "description": "Database connection error",
             "content": {
               "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Authenticate user and return JWT token",
+        "description": "Authenticates a user with email and password, returning a JWT token for accessing protected routes.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LoginInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string", "example": "Login successful" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "token": { "type": "string", "description": "JWT token for authentication" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input (e.g., missing fields, invalid email/password format)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "get": {
+        "tags": ["Authentication"],
+        "summary": "Log out user",
+        "description": "Instructs the client to discard the JWT token, effectively logging out the user.",
+        "responses": {
+          "200": {
+            "description": "Logout successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string", "example": "Logout successful" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "message": { "type": "string", "example": "Please discard the JWT token on the client side" }
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -53,9 +303,10 @@
     },
     "/api/users": {
       "get": {
+        "security": [{ "bearerAuth": [] }],
         "tags": ["Volunteer Tracking API"],
         "summary": "Get all users",
-        "description": "Retrieves a list of all users in the system.",
+        "description": "Retrieves a list of all users in the system. Requires JWT authentication.",
         "responses": {
           "200": {
             "description": "Users fetched successfully",
@@ -64,18 +315,21 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "Users fetched successfully"
-                    },
+                    "message": { "type": "string", "example": "Users fetched successfully" },
                     "data": {
                       "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/User"
-                      }
+                      "items": { "$ref": "#/components/schemas/User" }
                     }
                   }
                 }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized, missing or invalid JWT",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           },
@@ -83,9 +337,7 @@
             "description": "No users found",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           },
@@ -93,25 +345,22 @@
             "description": "Failed to fetch users",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           }
         }
       },
       "post": {
+        "security": [{ "bearerAuth": [] }],
         "tags": ["Volunteer Tracking API"],
         "summary": "Create a new user",
-        "description": "Creates a new user with the provided details.",
+        "description": "Creates a new user with the provided details, including a hashed password. Requires JWT authentication.",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UserInput"
-              }
+              "schema": { "$ref": "#/components/schemas/UserInput" }
             }
           }
         },
@@ -123,35 +372,26 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "User created successfully"
-                    },
-                    "data": {
-                      "$ref": "#/components/schemas/User"
-                    }
+                    "message": { "type": "string", "example": "User created successfully" },
+                    "data": { "$ref": "#/components/schemas/User" }
                   }
                 }
               }
             }
           },
-          "400": {
-            "description": "Invalid data, e.g., duplicate email or invalid account type",
+          "401": {
+            "description": "Unauthorized, missing or invalid JWT",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           },
           "422": {
-            "description": "Missing required fields or invalid format (e.g., email, phone number)",
+            "description": "Invalid input (e.g., missing fields, invalid email/phone/password format, duplicate email)",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           },
@@ -159,9 +399,7 @@
             "description": "Failed to create user",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           }
@@ -170,18 +408,17 @@
     },
     "/api/users/{id}": {
       "get": {
+        "security": [{ "bearerAuth": [] }],
         "tags": ["Volunteer Tracking API"],
         "summary": "Get user by ID",
-        "description": "Retrieves a user by their ID.",
+        "description": "Retrieves a user by their ID. Requires JWT authentication.",
         "parameters": [
           {
             "in": "path",
             "name": "id",
             "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "The ID of the user to retrieve"
+            "schema": { "type": "string", "pattern": "^[0-9a-fA-F]{24}$" },
+            "description": "MongoDB ObjectId of the user"
           }
         ],
         "responses": {
@@ -192,25 +429,26 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "User fetched successfully"
-                    },
-                    "data": {
-                      "$ref": "#/components/schemas/User"
-                    }
+                    "message": { "type": "string", "example": "User fetched successfully" },
+                    "data": { "$ref": "#/components/schemas/User" }
                   }
                 }
               }
             }
           },
-          "400": {
+          "401": {
+            "description": "Unauthorized, missing or invalid JWT",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
             "description": "Invalid user ID format",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           },
@@ -218,9 +456,7 @@
             "description": "User not found",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           },
@@ -228,36 +464,31 @@
             "description": "Failed to fetch user",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           }
         }
       },
       "put": {
+        "security": [{ "bearerAuth": [] }],
         "tags": ["Volunteer Tracking API"],
         "summary": "Update a user",
-        "description": "Updates an existing user with the provided details.",
+        "description": "Updates an existing user with the provided details. Requires JWT authentication.",
         "parameters": [
           {
             "in": "path",
             "name": "id",
             "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "The ID of the user to update"
+            "schema": { "type": "string", "pattern": "^[0-9a-fA-F]{24}$" },
+            "description": "MongoDB ObjectId of the user"
           }
         ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UserInput"
-              }
+              "schema": { "$ref": "#/components/schemas/UserInput" }
             }
           }
         },
@@ -269,25 +500,26 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "User updated successfully"
-                    },
-                    "data": {
-                      "$ref": "#/components/schemas/User"
-                    }
+                    "message": { "type": "string", "example": "User updated successfully" },
+                    "data": { "$ref": "#/components/schemas/User" }
                   }
                 }
               }
             }
           },
-          "400": {
-            "description": "Invalid data, e.g., duplicate email or invalid account type",
+          "401": {
+            "description": "Unauthorized, missing or invalid JWT",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input (e.g., missing fields, invalid email/phone/password format, duplicate email)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           },
@@ -295,19 +527,7 @@
             "description": "User not found",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Missing required fields or invalid format (e.g., email, phone number)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           },
@@ -315,27 +535,24 @@
             "description": "Failed to update user",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           }
         }
       },
       "delete": {
+        "security": [{ "bearerAuth": [] }],
         "tags": ["Volunteer Tracking API"],
         "summary": "Delete a user",
-        "description": "Deletes a user by their ID.",
+        "description": "Soft deletes a user by their ID. Requires JWT authentication.",
         "parameters": [
           {
             "in": "path",
             "name": "id",
             "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "The ID of the user to delete"
+            "schema": { "type": "string", "pattern": "^[0-9a-fA-F]{24}$" },
+            "description": "MongoDB ObjectId of the user"
           }
         ],
         "responses": {
@@ -346,25 +563,32 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "User deleted successfully"
-                    },
+                    "message": { "type": "string", "example": "User deleted successfully" },
                     "data": {
-                      "type": "object"
+                      "type": "object",
+                      "properties": {
+                        "matchedCount": { "type": "integer", "example": 1 },
+                        "modifiedCount": { "type": "integer", "example": 1 }
+                      }
                     }
                   }
                 }
               }
             }
           },
-          "400": {
+          "401": {
+            "description": "Unauthorized, missing or invalid JWT",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
             "description": "Invalid user ID format",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           },
@@ -372,9 +596,7 @@
             "description": "User not found",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           },
@@ -382,9 +604,7 @@
             "description": "Failed to delete user",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           }
@@ -393,9 +613,10 @@
     },
     "/api/opportunities": {
       "get": {
+        "security": [{ "bearerAuth": [] }],
         "tags": ["Volunteer Tracking API"],
         "summary": "Get all opportunities",
-        "description": "Retrieves a list of all opportunities in the system.",
+        "description": "Retrieves a list of all opportunities in the system. Requires JWT authentication.",
         "responses": {
           "200": {
             "description": "Opportunities fetched successfully",
@@ -404,18 +625,21 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "Opportunities fetched successfully"
-                    },
+                    "message": { "type": "string", "example": "Opportunities fetched successfully" },
                     "data": {
                       "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/Opportunity"
-                      }
+                      "items": { "$ref": "#/components/schemas/Opportunity" }
                     }
                   }
                 }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized, missing or invalid JWT",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           },
@@ -423,9 +647,7 @@
             "description": "No opportunities found",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           },
@@ -433,25 +655,22 @@
             "description": "Failed to fetch opportunities",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           }
         }
       },
       "post": {
+        "security": [{ "bearerAuth": [] }],
         "tags": ["Volunteer Tracking API"],
         "summary": "Create a new opportunity",
-        "description": "Creates a new opportunity with the provided details.",
+        "description": "Creates a new opportunity with the provided details. Requires JWT authentication and organizer/admin role.",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/OpportunityInput"
-              }
+              "schema": { "$ref": "#/components/schemas/OpportunityInput" }
             }
           }
         },
@@ -463,45 +682,34 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "Opportunity created successfully"
-                    },
-                    "data": {
-                      "$ref": "#/components/schemas/Opportunity"
-                    }
+                    "message": { "type": "string", "example": "Opportunity created successfully" },
+                    "data": { "$ref": "#/components/schemas/Opportunity" }
                   }
                 }
               }
             }
           },
-          "400": {
-            "description": "Invalid data, e.g., invalid organizer ID or duplicate opportunity",
+          "401": {
+            "description": "Unauthorized, missing or invalid JWT",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           },
           "403": {
-            "description": "Unauthorized, user is not an organizer or admin",
+            "description": "Forbidden, user is not an organizer or admin",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           },
           "422": {
-            "description": "Missing required fields or invalid format (e.g., date, time, duration)",
+            "description": "Invalid input (e.g., missing fields, invalid date/time/duration)",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           },
@@ -509,9 +717,7 @@
             "description": "Failed to create opportunity",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           }
@@ -520,18 +726,17 @@
     },
     "/api/opportunities/{id}": {
       "get": {
+        "security": [{ "bearerAuth": [] }],
         "tags": ["Volunteer Tracking API"],
         "summary": "Get opportunity by ID",
-        "description": "Retrieves an opportunity by its ID.",
+        "description": "Retrieves an opportunity by its ID. Requires JWT authentication.",
         "parameters": [
           {
             "in": "path",
             "name": "id",
             "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "The ID of the opportunity to retrieve"
+            "schema": { "type": "string", "pattern": "^[0-9a-fA-F]{24}$" },
+            "description": "MongoDB ObjectId of the opportunity"
           }
         ],
         "responses": {
@@ -542,25 +747,26 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "Opportunity fetched successfully"
-                    },
-                    "data": {
-                      "$ref": "#/components/schemas/Opportunity"
-                    }
+                    "message": { "type": "string", "example": "Opportunity fetched successfully" },
+                    "data": { "$ref": "#/components/schemas/Opportunity" }
                   }
                 }
               }
             }
           },
-          "400": {
+          "401": {
+            "description": "Unauthorized, missing or invalid JWT",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
             "description": "Invalid opportunity ID format",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           },
@@ -568,9 +774,7 @@
             "description": "Opportunity not found",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           },
@@ -578,36 +782,31 @@
             "description": "Failed to fetch opportunity",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           }
         }
       },
       "put": {
+        "security": [{ "bearerAuth": [] }],
         "tags": ["Volunteer Tracking API"],
         "summary": "Update an opportunity",
-        "description": "Updates an existing opportunity with the provided details.",
+        "description": "Updates an existing opportunity with the provided details. Requires JWT authentication and organizer/admin role.",
         "parameters": [
           {
             "in": "path",
             "name": "id",
             "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "The ID of the opportunity to update"
+            "schema": { "type": "string", "pattern": "^[0-9a-fA-F]{24}$" },
+            "description": "MongoDB ObjectId of the opportunity"
           }
         ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/OpportunityInput"
-              }
+              "schema": { "$ref": "#/components/schemas/OpportunityInput" }
             }
           }
         },
@@ -619,35 +818,34 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "Opportunity updated successfully"
-                    },
-                    "data": {
-                      "$ref": "#/components/schemas/Opportunity"
-                    }
+                    "message": { "type": "string", "example": "Opportunity updated successfully" },
+                    "data": { "$ref": "#/components/schemas/Opportunity" }
                   }
                 }
               }
             }
           },
-          "400": {
-            "description": "Invalid data, e.g., invalid organizer ID or duplicate opportunity",
+          "401": {
+            "description": "Unauthorized, missing or invalid JWT",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           },
           "403": {
-            "description": "Unauthorized, user is not an organizer or admin",
+            "description": "Forbidden, user is not an organizer or admin",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input (e.g., missing fields, invalid date/time/duration)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           },
@@ -655,19 +853,7 @@
             "description": "Opportunity not found",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Missing required fields or invalid format (e.g., date, time, duration)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           },
@@ -675,27 +861,24 @@
             "description": "Failed to update opportunity",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           }
         }
       },
       "delete": {
+        "security": [{ "bearerAuth": [] }],
         "tags": ["Volunteer Tracking API"],
         "summary": "Delete an opportunity",
-        "description": "Deletes an opportunity by its ID.",
+        "description": "Soft deletes an opportunity by its ID. Requires JWT authentication.",
         "parameters": [
           {
             "in": "path",
             "name": "id",
             "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "The ID of the opportunity to delete"
+            "schema": { "type": "string", "pattern": "^[0-9a-fA-F]{24}$" },
+            "description": "MongoDB ObjectId of the opportunity"
           }
         ],
         "responses": {
@@ -706,25 +889,32 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "Opportunity deleted successfully"
-                    },
+                    "message": { "type": "string", "example": "Opportunity deleted successfully" },
                     "data": {
-                      "type": "object"
+                      "type": "object",
+                      "properties": {
+                        "matchedCount": { "type": "integer", "example": 1 },
+                        "modifiedCount": { "type": "integer", "example": 1 }
+                      }
                     }
                   }
                 }
               }
             }
           },
-          "400": {
+          "401": {
+            "description": "Unauthorized, missing or invalid JWT",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
             "description": "Invalid opportunity ID format",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           },
@@ -732,9 +922,7 @@
             "description": "Opportunity not found",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           },
@@ -742,9 +930,7 @@
             "description": "Failed to delete opportunity",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           }
@@ -753,18 +939,17 @@
     },
     "/api/events/{userId}/opportunities": {
       "get": {
+        "security": [{ "bearerAuth": [] }],
         "tags": ["Volunteer Tracking API"],
         "summary": "Get user opportunities",
-        "description": "Retrieves all opportunities associated with a user by their ID.",
+        "description": "Retrieves all opportunities associated with a user by their ID. Requires JWT authentication.",
         "parameters": [
           {
             "in": "path",
             "name": "userId",
             "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "The ID of the user"
+            "schema": { "type": "string", "pattern": "^[0-9a-fA-F]{24}$" },
+            "description": "MongoDB ObjectId of the user"
           }
         ],
         "responses": {
@@ -775,28 +960,29 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "User opportunities fetched successfully"
-                    },
+                    "message": { "type": "string", "example": "User opportunities fetched successfully" },
                     "data": {
                       "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/UserOpportunity"
-                      }
+                      "items": { "$ref": "#/components/schemas/UserOpportunity" }
                     }
                   }
                 }
               }
             }
           },
-          "400": {
+          "401": {
+            "description": "Unauthorized, missing or invalid JWT",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
             "description": "Invalid user ID format",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           },
@@ -804,9 +990,7 @@
             "description": "No opportunities found for user",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           },
@@ -814,38 +998,33 @@
             "description": "Failed to fetch user opportunities",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           }
         }
       }
     },
-    "/api/events/{userId}/opportunities/{OpportunityId}": {
+    "/api/events/{userId}/opportunities/{opportunityId}": {
       "post": {
+        "security": [{ "bearerAuth": [] }],
         "tags": ["Volunteer Tracking API"],
         "summary": "Sign up for an opportunity",
-        "description": "Signs a user up for an opportunity using their IDs.",
+        "description": "Signs a user up for an opportunity using their IDs. Requires JWT authentication.",
         "parameters": [
           {
             "in": "path",
             "name": "userId",
             "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "The ID of the user"
+            "schema": { "type": "string", "pattern": "^[0-9a-fA-F]{24}$" },
+            "description": "MongoDB ObjectId of the user"
           },
           {
             "in": "path",
-            "name": "OpportunityId",
+            "name": "opportunityId",
             "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "The ID of the opportunity"
+            "schema": { "type": "string", "pattern": "^[0-9a-fA-F]{24}$" },
+            "description": "MongoDB ObjectId of the opportunity"
           }
         ],
         "responses": {
@@ -856,35 +1035,26 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "Successfully signed up for opportunity"
-                    },
-                    "data": {
-                      "$ref": "#/components/schemas/UserOpportunity"
-                    }
+                    "message": { "type": "string", "example": "Successfully signed up for opportunity" },
+                    "data": { "$ref": "#/components/schemas/UserOpportunity" }
                   }
                 }
               }
             }
           },
-          "400": {
-            "description": "Invalid user ID or opportunity ID format",
+          "401": {
+            "description": "Unauthorized, missing or invalid JWT",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           },
           "422": {
-            "description": "Missing required path parameters (userId or opportunityId)",
+            "description": "Invalid user ID or opportunity ID format",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           },
@@ -892,36 +1062,33 @@
             "description": "Failed to sign up for opportunity",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           }
         }
-      },
+      }
+    },
+    "/api/events/{userId}/opportunities/{userOpportunityId}": {
       "put": {
+        "security": [{ "bearerAuth": [] }],
         "tags": ["Volunteer Tracking API"],
         "summary": "Approve volunteered hours",
-        "description": "Approves volunteered hours for a user for a specific opportunity.",
+        "description": "Approves volunteered hours for a user-opportunity record. Requires JWT authentication.",
         "parameters": [
           {
             "in": "path",
             "name": "userId",
             "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "The ID of the approving user"
+            "schema": { "type": "string", "pattern": "^[0-9a-fA-F]{24}$" },
+            "description": "MongoDB ObjectId of the approving user"
           },
           {
             "in": "path",
             "name": "userOpportunityId",
             "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "The ID of the user opportunity"
+            "schema": { "type": "string", "pattern": "^[0-9a-fA-F]{24}$" },
+            "description": "MongoDB ObjectId of the user-opportunity record"
           }
         ],
         "responses": {
@@ -932,35 +1099,32 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "Successfully approved hours"
-                    },
+                    "message": { "type": "string", "example": "Successfully approved hours" },
                     "data": {
-                      "$ref": "#/components/schemas/UserOpportunity"
+                      "type": "object",
+                      "properties": {
+                        "matchedCount": { "type": "integer", "example": 1 },
+                        "modifiedCount": { "type": "integer", "example": 1 }
+                      }
                     }
                   }
                 }
               }
             }
           },
-          "400": {
-            "description": "Invalid user ID or user opportunity ID format",
+          "401": {
+            "description": "Unauthorized, missing or invalid JWT",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           },
           "422": {
-            "description": "Missing required path parameters (userId or userOpportunityId)",
+            "description": "Invalid user ID or user opportunity ID format",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           },
@@ -968,9 +1132,7 @@
             "description": "Failed to approve hours",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           }
@@ -979,21 +1141,17 @@
     },
     "/api/events/{userOpportunityId}": {
       "delete": {
+        "security": [{ "bearerAuth": [] }],
         "tags": ["Volunteer Tracking API"],
         "summary": "Withdraw from an opportunity",
-        "description": "Withdraws a user from an opportunity by setting `isDeleted` to `true` (soft delete) using the signup ID.",
-        "operationId": "withdrawFromOpportunity",
+        "description": "Soft deletes a user-opportunity record by its ID. Requires JWT authentication.",
         "parameters": [
           {
             "in": "path",
             "name": "userOpportunityId",
             "required": true,
-            "schema": {
-              "type": "string",
-              "pattern": "^[0-9a-fA-F]{24}$",
-              "example": "68d34d1878ec6191bff232c0"
-            },
-            "description": "The ID of the signup record (MongoDB ObjectId) for the user-opportunity pair"
+            "schema": { "type": "string", "pattern": "^[0-9a-fA-F]{24}$" },
+            "description": "MongoDB ObjectId of the user-opportunity record"
           }
         ],
         "responses": {
@@ -1004,236 +1162,52 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "Successfully withdrew from opportunity"
-                    },
+                    "message": { "type": "string", "example": "Successfully withdrew from opportunity" },
                     "data": {
                       "type": "object",
                       "properties": {
-                        "matchedCount": {
-                          "type": "integer",
-                          "example": 1,
-                          "description": "Number of documents matched by the query"
-                        },
-                        "modifiedCount": {
-                          "type": "integer",
-                          "example": 1,
-                          "description": "Number of documents updated (typically 1 for a successful soft delete)"
-                        }
-                      },
-                      "required": ["matchedCount", "modifiedCount"]
+                        "matchedCount": { "type": "integer", "example": 1 },
+                        "modifiedCount": { "type": "integer", "example": 1 }
+                      }
                     }
-                  },
-                  "required": ["message", "data"]
+                  }
                 }
               }
             }
           },
-          "400": {
-            "description": "Invalid userOpportunityId format",
+          "401": {
+            "description": "Unauthorized, missing or invalid JWT",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Signup record not found or already withdrawn",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           },
           "422": {
-            "description": "Missing required userOpportunityId",
+            "description": "Invalid userOpportunityId format",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "User-opportunity record not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           },
           "500": {
-            "description": "Server error, e.g., schema validation failure or database issue",
+            "description": "Failed to withdraw from opportunity",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           }
         }
-      }
-    }
-  },
-  "components": {
-    "schemas": {
-      "User": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "string" },
-          "firstName": { "type": "string" },
-          "lastName": { "type": "string" },
-          "email": { "type": "string", "format": "email" },
-          "phoneNumber": { 
-            "type": "string",
-            "pattern": "^\\(?[0-9]{3}\\)?[0-9]{3}-?[0-9]{4}$|^[0-9]{3}\\.[0-9]{3}\\.[0-9]{4}$",
-            "description": "Must be (123)456-7890, 1234567890, or 123.456.7890"
-          },
-          "accountType": { 
-            "type": "string",
-            "enum": ["student", "admin", "organizer"],
-            "description": "Must be one of student, admin, or organizer"
-          },
-          "createdAt": { "type": "string", "format": "date-time" },
-          "isDeleted": { "type": "boolean" },
-          "graduationYear": { "type": "integer", "nullable": true }
-        },
-        "required": ["firstName", "lastName", "email", "phoneNumber", "accountType", "createdAt", "isDeleted"]
-      },
-      "UserInput": {
-        "type": "object",
-        "properties": {
-          "firstName": { "type": "string" },
-          "lastName": { "type": "string" },
-          "email": { "type": "string", "format": "email" },
-          "phoneNumber": { 
-            "type": "string",
-            "pattern": "^\\(?[0-9]{3}\\)?[0-9]{3}-?[0-9]{4}$|^[0-9]{3}\\.[0-9]{3}\\.[0-9]{4}$",
-            "description": "Must be (123)456-7890, 1234567890, or 123.456.7890"
-          },
-          "accountType": { 
-            "type": "string",
-            "enum": ["student", "admin", "organizer"],
-            "description": "Must be one of student, admin, or organizer"
-          },
-          "graduationYear": { 
-            "type": "integer", 
-            "nullable": true,
-            "description": "Optional integer year, required for students, between 1900 and 2035"
-          }
-        },
-        "required": ["firstName", "lastName", "email", "phoneNumber", "accountType"]
-      },
-      "Opportunity": {
-        "type": "object",
-        "properties": {
-          "organizerId": { 
-            "type": "string",
-            "description": "MongoDB ObjectId referencing the organizer user"
-          },
-          "title": { "type": "string" },
-          "description": { "type": "string" },
-          "location": { "type": "string" },
-          "date": { 
-            "type": "string", 
-            "format": "date",
-            "description": "ISO 8601 date string (e.g., YYYY-MM-DD)"
-          },
-          "time": { 
-            "type": "string",
-            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
-            "description": "Time in HH:MM 24-hour format"
-          },
-          "duration": { 
-            "type": "number",
-            "minimum": 0,
-            "description": "Duration in hours, must be non-negative"
-          },
-          "createdAt": { "type": "string", "format": "date-time" },
-          "isDeleted": { "type": "boolean" },
-          "deleteDate": { 
-            "type": "string", 
-            "format": "date-time",
-            "nullable": true,
-            "description": "Date of soft deletion, null if not deleted"
-          }
-        },
-        "required": ["organizerId", "title", "description", "location", "date", "time", "duration", "createdAt", "isDeleted"]
-      },
-      "OpportunityInput": {
-        "type": "object",
-        "properties": {
-          "organizerId": { 
-            "type": "string",
-            "description": "MongoDB ObjectId referencing the organizer user"
-          },
-          "title": { "type": "string" },
-          "description": { "type": "string" },
-          "location": { "type": "string" },
-          "date": { 
-            "type": "string", 
-            "format": "date",
-            "description": "ISO 8601 date string (e.g., YYYY-MM-DD)"
-          },
-          "time": { 
-            "type": "string",
-            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
-            "description": "Time in HH:MM 24-hour format"
-          },
-          "duration": { 
-            "type": "number",
-            "minimum": 0,
-            "description": "Duration in hours, must be non-negative"
-          }
-        },
-        "required": ["organizerId", "title", "description", "location", "date", "time", "duration"]
-      },
-      "UserOpportunity": {
-        "type": "object",
-        "properties": {
-          "userId": { 
-            "type": "string",
-            "description": "MongoDB ObjectId referencing the user"
-          },
-          "opportunityId": { 
-            "type": "string",
-            "description": "MongoDB ObjectId referencing the opportunity"
-          },
-          "createdAt": { 
-            "type": "string", 
-            "format": "date-time",
-            "description": "Date the user signed up for the opportunity"
-          },
-          "isDeleted": { 
-            "type": "boolean",
-            "description": "Indicates if the signup is soft-deleted"
-          },
-          "deleteDate": { 
-            "type": "string", 
-            "format": "date-time",
-            "nullable": true,
-            "description": "Date of soft deletion, null if not deleted"
-          },
-          "approvedBy": { 
-            "type": "string", 
-            "nullable": true,
-            "description": "MongoDB ObjectId of the user who approved the hours, null if not approved"
-          },
-          "approvedOn": { 
-            "type": "string", 
-            "format": "date-time",
-            "nullable": true,
-            "description": "Date the hours were approved, null if not approved"
-          }
-        },
-        "required": ["userId", "opportunityId", "createdAt", "isDeleted"]
-      },
-      "ErrorResponse": {
-        "type": "object",
-        "properties": {
-          "message": { "type": "string" },
-          "error": { "type": "string" }
-        },
-        "required": ["message", "error"]
       }
     }
   }

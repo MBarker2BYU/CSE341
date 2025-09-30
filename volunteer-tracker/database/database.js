@@ -1,4 +1,8 @@
 const { MongoClient, ObjectId, Double } = require('mongodb');
+const bcrypt = require('bcrypt');
+
+// Number of salt rounds for bcrypt hashing
+const SALT_ROUNDS = 10;
 
 // Function to connect to MongoDB and ping the database
 exports.connectionAndPing = async function (uri, connectTimeoutMS = 30000,
@@ -96,10 +100,10 @@ async function createUserCollection(database) {
           properties: {
             firstName: { bsonType: 'string', description: 'must be a string and is required' },
             lastName: { bsonType: 'string', description: 'must be a string and is required' },
-            //password: { bsonType: 'string', description: 'must be a hashed password and is required' },
             email: { bsonType: 'string', pattern: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$', description: 'must be a valid email and is required' },
             phoneNumber: { bsonType: 'string', pattern: '^\\(?[0-9]{3}\\)?[-.]?[0-9]{3}[-.]?[0-9]{4}$', description: 'must be (123)456-7890, 1234567890, 123-456-7890 or 123.456.7890' },
             accountType: { enum: ['student', 'admin', 'organizer'], description: 'must be one of student, admin, organizer' },
+            password: { bsonType: 'string', description: 'must be a hashed password (bcrypt) and is required' },
             graduationYear: {
               bsonType: ['int', 'null'],
               minimum: 1900,
@@ -278,12 +282,16 @@ async function loadSampleData(database) {
 
   try {
     
+    // Hash sample passwords
+    const password = 'Password123!'; // Strong password meeting requirements (12+ chars, uppercase, lowercase, number, special char)
+    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
 
     await database.collection('user').insertMany([
     {
       firstName: 'Alice',
       lastName: 'Johnson',
       email: 'alice.johnson@example.com',
+      password: hashedPassword,
       phoneNumber: '123.456.7890',
       accountType: 'admin',
       createdAt: new Date(),
@@ -293,6 +301,7 @@ async function loadSampleData(database) {
       firstName: 'Bob',
       lastName: 'Smith',
       email: 'bob.smith@example.com',
+      password: hashedPassword,
       phoneNumber: '987.654.3210',
       accountType: 'organizer',
       createdAt: new Date(),
@@ -302,6 +311,7 @@ async function loadSampleData(database) {
       firstName: 'Carol',
       lastName: 'Davis',
       email: 'carol.davis@example.com',
+      password: hashedPassword,
       phoneNumber: '555.555.5555',
       accountType: 'student',
       graduationYear: 2026,
@@ -312,6 +322,7 @@ async function loadSampleData(database) {
       firstName: 'David',
       lastName: 'Wilson',
       email: 'david.wilson@example.com',
+      password: hashedPassword,
       phoneNumber: '444.444.4444',
       accountType: 'student',
       graduationYear: 2027,
@@ -322,6 +333,7 @@ async function loadSampleData(database) {
       firstName: 'Eve',
       lastName: 'Brown',
       email: 'eve.brown@example.com',
+      password: hashedPassword,
       phoneNumber: '333.333.3333',
       accountType: 'student',
       graduationYear: 2028,
@@ -332,6 +344,7 @@ async function loadSampleData(database) {
       firstName: 'Frank',
       lastName: 'Green',
       email: 'frank.green@example.com',
+      password: hashedPassword,
       phoneNumber: '222.222.2222',
       accountType: 'student',
       graduationYear: 2029,

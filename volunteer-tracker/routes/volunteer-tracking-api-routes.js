@@ -1,27 +1,29 @@
 const express = require('express');
 const router = express.Router();
-
+const passport = require('passport');
 const volunteerApiController = require('../controllers/volunteer-tracking-api-controller');
 
-// Define C.R.U.D. routes for volunteers
-router.get('/users', volunteerApiController.getAllUsers);
-router.get('/users/:id', volunteerApiController.getUserById);
-router.post('/users', volunteerApiController.createUser);
-router.put('/users/:id', volunteerApiController.updateUser);
-router.delete('/users/:id', volunteerApiController.deleteUser);
+// Middleware to protect routes
+const authenticate = passport.authenticate('jwt', { session: false });
 
-// Define CRUD routes for opportunity management
-router.get('/opportunities', volunteerApiController.getAllOpportunities);
-router.get('/opportunities/:id', volunteerApiController.getOpportunityById);
-router.post('/opportunities', volunteerApiController.createOpportunity);
-router.put('/opportunities/:id', volunteerApiController.updateOpportunity);
-router.delete('/opportunities/:id', volunteerApiController.deleteOpportunity);
+// Define C.R.U.D. routes for volunteers (protected)
+router.get('/users', authenticate, volunteerApiController.getAllUsers);
+router.get('/users/:id', authenticate, volunteerApiController.getUserById);
+router.post('/users', authenticate, volunteerApiController.createUser);
+router.put('/users/:id', authenticate, volunteerApiController.updateUser);
+router.delete('/users/:id', authenticate, volunteerApiController.deleteUser);
 
-// Sign up and withdraw management Routes
-router.get('/events/:userId/opportunities', volunteerApiController.getUserOpportunities);
-router.post('/events/:userId/opportunities/:opportunityId', volunteerApiController.signUpForOpportunity);
-router.put('/events/:userId/opportunities/:userOpportunityId', volunteerApiController.approveHours);
-router.delete('/events/:userOpportunityId', volunteerApiController.withdrawFromOpportunity);
+// Define CRUD routes for opportunity management (protected)
+router.get('/opportunities', authenticate, volunteerApiController.getAllOpportunities);
+router.get('/opportunities/:id', authenticate, volunteerApiController.getOpportunityById);
+router.post('/opportunities', authenticate, volunteerApiController.createOpportunity);
+router.put('/opportunities/:id', authenticate, volunteerApiController.updateOpportunity);
+router.delete('/opportunities/:id', authenticate, volunteerApiController.deleteOpportunity);
 
+// CRUD for sign up and withdraw management routes (protected)
+router.get('/events/:userId/opportunities', authenticate, volunteerApiController.getUserOpportunities);
+router.post('/events/:userId/opportunities/:opportunityId', authenticate, volunteerApiController.signUpForOpportunity);
+router.put('/events/:userId/opportunities/:userOpportunityId', authenticate, volunteerApiController.approveHours);
+router.delete('/events/:userOpportunityId', authenticate, volunteerApiController.withdrawFromOpportunity);
 
 module.exports = router;
