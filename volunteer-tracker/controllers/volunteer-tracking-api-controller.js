@@ -294,15 +294,15 @@ exports.createOpportunity = async (req, res) => {
             return commonUtilities.formattedResponse(res, 403, 'Unauthorized', { message: 'User is not authorized to create opportunities' });
         }
 
-        if (!isValidDate(date)) {
+        if (!commonUtilities.isValidDate(date)) {
             return commonUtilities.formattedResponse(res, 422, 'Invalid date format', { message: 'Date must be in YYYY-MM-DD format' });
         }
 
-        if (!isValidTime(time)) {
+        if (!commonUtilities.isValidTime(time)) {
             return commonUtilities.formattedResponse(res, 422, 'Invalid time format', { message: 'Time must be in HH:MM 24-hour format' });
         }
 
-        if (!isValidDuration(duration)) {
+        if (!commonUtilities.isValidDuration(duration)) {
             return commonUtilities.formattedResponse(res, 422, 'Invalid duration', { message: 'Duration must be a non-negative number' });
         }
 
@@ -347,15 +347,15 @@ exports.updateOpportunity = async (req, res) => {
             return commonUtilities.formattedResponse(res, 403, 'Unauthorized', { message: 'User is not authorized to update opportunities' });
         }
 
-        if (!isValidDate(date)) {
+        if (!commonUtilities.isValidDate(date)) {
             return commonUtilities.formattedResponse(res, 422, 'Invalid date format', { message: 'Date must be in YYYY-MM-DD format' });
         }
 
-        if (!isValidTime(time)) {
+        if (!commonUtilities.isValidTime(time)) {
             return commonUtilities.formattedResponse(res, 422, 'Invalid time format', { message: 'Time must be in HH:MM 24-hour format' });
         }
 
-        if (!isValidDuration(duration)) {
+        if (!commonUtilities.isValidDuration(duration)) {
             return commonUtilities.formattedResponse(res, 422, 'Invalid duration', { message: 'Duration must be a non-negative number' });
         }
 
