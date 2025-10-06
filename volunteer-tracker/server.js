@@ -1,9 +1,8 @@
 const express = require('express');
 const app = express();
 const dotenv = require('dotenv');
-const session = require('express-session');
+
 const passport = require('passport');
-const cors = require('cors');
 
 const database = require('./database');
 
@@ -23,23 +22,11 @@ const port = process.env.PORT || 8080;
 console.log('MONGODB_URI:', process.env.MONGODB_URI); // Debug
 console.log('JWT_SECRET:', process.env.JWT_SECRET);
 
-//Middleware
-app.use(cors({ // Add this
-  origin: [`http://localhost:${port}`, 'https://your-render-url.onrender.com'],
-  credentials: true
-}));
-
+// Parse JSON bodies
 app.use(express.json());
-app.use(session({
-  secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: false,
-  cookie: { secure: process.env.NODE_ENV === 'production' }
-}));
 
+// Initialize Passport
 app.use(passport.initialize());
-app.use(passport.session());
-
 require('./auth'); // Load Passport JWT strategy
 
 // Mount the default router

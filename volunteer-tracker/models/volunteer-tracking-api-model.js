@@ -52,16 +52,16 @@ exports.createUser = async (newUser) => {
     try {
         const db = await database.getDatabase();
 
-        // if (!newUser.password) {
-        //     throw new Error('Password is required');
-        // }
-        // const hashedPassword = await bcrypt.hash(newUser.password, SALT_ROUNDS);
+        if (!newUser.password) {
+            throw new Error('Password is required');
+        }
+        const hashedPassword = await bcrypt.hash(newUser.password, SALT_ROUNDS);
 
         const result = await db.collection('user').insertOne({
             firstName: newUser.firstName,
             lastName: newUser.lastName,
             email: newUser.email,
-            // password: hashedPassword,
+            password: hashedPassword,
             phoneNumber: newUser.phoneNumber,
             accountType: newUser.accountType,
             createdAt: new Date(),
@@ -300,65 +300,21 @@ exports.approveHours = async (approvedById, userOpportunityId) => {
     }
 };
 
-exports.findUserByGithubId = async (githubId) => {
-  try {
-    const db = await database.getDatabase();
-    const user = await db.collection('user').findOne(
-      { githubId, isDeleted: { $ne: true } },
-      { projection: { password: 0 } }
-    );
-    return user;
-  } catch (error) {
-    console.error('Error fetching user by GitHub ID:', error);
-    throw error;
-  }
-};
-
-exports.createOAuthUser = async (newUser) => {
-  try {
-    const db = await database.getDatabase();
-    const result = await db.collection('user').insertOne({
-      githubId: newUser.githubId,
-      firstName: newUser.firstName,
-      lastName: newUser.lastName,
-      email: newUser.email,
-      phoneNumber: newUser.phoneNumber,
-      accountType: newUser.accountType,
-      createdAt: newUser.createdAt,
-      isDeleted: newUser.isDeleted,
-      graduationYear: newUser.accountType === 'student' ? (newUser.graduationYear || 2025) : null
-    });
-    const insertedUser = await db.collection('user').findOne(
-      { _id: result.insertedId },
-      { projection: { password: 0 } }
-    );
-    return insertedUser;
-  } catch (error) {
-    if (error.code === 11000) {
-      throw new Error(`Email '${newUser.email}' is already in use`);
-    }
-    console.error('Error creating OAuth user:', error);
-    throw Object.assign(error, { statusCode: error.statusCode || 500 });
-  }
-};
-
 // Explicit exports for all functions
 module.exports = {
-  getAllUsers: exports.getAllUsers,
-  getUserById: exports.getUserById,
-  findUserByEmail: exports.findUserByEmail,
-  findUserByGithubId: exports.findUserByGithubId,
-  createUser: exports.createUser,
-  createOAuthUser: exports.createOAuthUser,
-  updateUser: exports.updateUser,
-  deleteUser: exports.deleteUser,
-  getAllOpportunities: exports.getAllOpportunities,
-  getOpportunityById: exports.getOpportunityById,
-  createOpportunity: exports.createOpportunity,
-  updateOpportunity: exports.updateOpportunity,
-  deleteOpportunity: exports.deleteOpportunity,
-  getUserOpportunities: exports.getUserOpportunities,
-  signUpForOpportunity: exports.signUpForOpportunity,
-  withdrawFromOpportunity: exports.withdrawFromOpportunity,
-  approveHours: exports.approveHours
+    getAllUsers: exports.getAllUsers,
+    getUserById: exports.getUserById,
+    findUserByEmail: exports.findUserByEmail,
+    createUser: exports.createUser,
+    updateUser: exports.updateUser,
+    deleteUser: exports.deleteUser,
+    getAllOpportunities: exports.getAllOpportunities,
+    getOpportunityById: exports.getOpportunityById,
+    createOpportunity: exports.createOpportunity,
+    updateOpportunity: exports.updateOpportunity,
+    deleteOpportunity: exports.deleteOpportunity,
+    getUserOpportunities: exports.getUserOpportunities,
+    signUpForOpportunity: exports.signUpForOpportunity,
+    withdrawFromOpportunity: exports.withdrawFromOpportunity,
+    approveHours: exports.approveHours
 };
