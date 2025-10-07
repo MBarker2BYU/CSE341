@@ -2,11 +2,16 @@ const passport = require('passport');
 const GitHubStrategy = require('passport-github2').Strategy;
 require('dotenv').config();
 
+// Set callback URL based on environment
+const callbackURL = process.env.NODE_ENV === 'production'
+    ? 'https://cse341-volunteer-tracker.onrender.com/auth/github/callback'
+    : 'http://localhost:8080/auth/github/callback';
+
 // Configure GitHub OAuth strategy
 passport.use(new GitHubStrategy({
     clientID: process.env.GITHUB_CLIENT_ID,
     clientSecret: process.env.GITHUB_CLIENT_SECRET,
-    callbackURL: process.env.GITHUB_CALLBACK_URL
+    callbackURL: callbackURL
 }, (accessToken, refreshToken, profile, done) => {
     console.log('GitHub callback:', { accessToken: accessToken ? 'present' : 'missing', profile });
     return done(null, profile); // Pass profile directly, no database lookup
@@ -19,7 +24,7 @@ passport.serializeUser((user, done) => {
 
 // Deserialize user from session
 passport.deserializeUser((id, done) => {
-    done(null, { id }); // No database lookup, return minimal user object
+    done(null, { id }); // No database lookup
 });
 
 module.exports = passport;
