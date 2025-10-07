@@ -35,18 +35,18 @@ exports.getUserById = async (userId) => {
     }
 };
 
-exports.findUserByEmail = async (email) => {
-    try {
-        const db = await database.getDatabase();
-        const user = await db.collection('user').findOne(
-            { email, isDeleted: { $ne: true } }
-        );
-        return user;
-    } catch (error) {
-        console.error('Error fetching user by email:', error);
-        throw error;
-    }
-};
+// exports.findUserByEmail = async (email) => {
+//     try {
+//         const db = await database.getDatabase();
+//         const user = await db.collection('user').findOne(
+//             { email, isDeleted: { $ne: true } }
+//         );
+//         return user;
+//     } catch (error) {
+//         console.error('Error fetching user by email:', error);
+//         throw error;
+//     }
+// };
 
 exports.createUser = async (newUser) => {
     try {

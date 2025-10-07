@@ -1,10 +1,16 @@
 {
-  "openapi": "3.0.3",
+  "openapi": "3.0.0",
   "info": {
     "title": "Volunteer Tracking API",
-    "description": "API for managing volunteers and opportunities, with a default welcome endpoint.",
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "description": "API for managing volunteers and opportunities with GitHub OAuth 2.0 authentication"
   },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Local server"
+    }
+  ],
   "tags": [
     {
       "name": "default",
@@ -13,75 +19,42 @@
     {
       "name": "Volunteer Tracking API",
       "description": "Volunteer and opportunity management operations from volunteer-tracking-api-controller"
+    },
+    {
+      "name": "Authentication",
+      "description": "GitHub OAuth 2.0 authentication operations"
     }
   ],
   "components": {
+    "securitySchemes": {
+      "OAuth2": {
+        "type": "oauth2",
+        "flows": {
+          "authorizationCode": {
+            "authorizationUrl": "https://github.com/login/oauth/authorize",
+            "tokenUrl": "https://github.com/login/oauth/access_token",
+            "scopes": {
+              "user:email": "Read user email"
+            }
+          }
+        }
+      }
+    },
     "schemas": {
       "User": {
         "type": "object",
         "properties": {
-          "_id": { "type": "string", "description": "MongoDB ObjectId of the user" },
-          "firstName": { "type": "string" },
-          "lastName": { "type": "string" },
+          "id": { "type": "string", "description": "GitHub user ID" },
           "email": { "type": "string", "format": "email" },
-          "phoneNumber": {
-            "type": "string",
-            "pattern": "^\\(?[0-9]{3}\\)?[-.]?[0-9]{3}[-.]?[0-9]{4}$",
-            "description": "Must be (123)456-7890, 1234567890, 123-456-7890, or 123.456.7890"
-          },
-          "accountType": {
-            "type": "string",
-            "enum": ["student", "admin", "organizer"],
-            "description": "Must be one of student, admin, or organizer"
-          },
-          "graduationYear": {
-            "type": "integer",
-            "nullable": true,
-            "minimum": 1900,
-            "maximum": 2035,
-            "description": "Required for students, optional otherwise"
-          },
-          "createdAt": { "type": "string", "format": "date-time" },
-          "isDeleted": { "type": "boolean" },
-          "deleteDate": { "type": "string", "format": "date-time", "nullable": true }
+          "name": { "type": "string" }
         },
-        "required": ["_id", "firstName", "lastName", "email", "phoneNumber", "accountType", "createdAt", "isDeleted"]
-      },
-      "UserInput": {
-        "type": "object",
-        "properties": {
-          "firstName": { "type": "string" },
-          "lastName": { "type": "string" },
-          "email": { "type": "string", "format": "email" },
-          "password": {
-            "type": "string",
-            "description": "Must be 12+ characters with 1 uppercase, 1 lowercase, 1 number, 1 special character (@$!%*?&). Required for POST, optional for PUT."
-          },
-          "phoneNumber": {
-            "type": "string",
-            "pattern": "^\\(?[0-9]{3}\\)?[-.]?[0-9]{3}[-.]?[0-9]{4}$",
-            "description": "Must be (123)456-7890, 1234567890, 123-456-7890, or 123.456.7890"
-          },
-          "accountType": {
-            "type": "string",
-            "enum": ["student", "admin", "organizer"],
-            "description": "Must be one of student, admin, or organizer"
-          },
-          "graduationYear": {
-            "type": "integer",
-            "nullable": true,
-            "minimum": 1900,
-            "maximum": 2035,
-            "description": "Required for students, optional otherwise"
-          }
-        },
-        "required": ["firstName", "lastName", "email", "phoneNumber", "accountType"]
+        "required": ["id"]
       },
       "Opportunity": {
         "type": "object",
         "properties": {
           "_id": { "type": "string", "description": "MongoDB ObjectId of the opportunity" },
-          "organizerId": { "type": "string", "description": "MongoDB ObjectId referencing the organizer user" },
+          "organizerId": { "type": "string", "description": "GitHub user ID of the organizer" },
           "title": { "type": "string" },
           "description": { "type": "string" },
           "location": { "type": "string" },
@@ -109,7 +82,6 @@
       "OpportunityInput": {
         "type": "object",
         "properties": {
-          "organizerId": { "type": "string", "description": "MongoDB ObjectId referencing the organizer user" },
           "title": { "type": "string" },
           "description": { "type": "string" },
           "location": { "type": "string" },
@@ -129,19 +101,19 @@
             "description": "Duration in hours, must be non-negative"
           }
         },
-        "required": ["organizerId", "title", "description", "location", "date", "time", "duration"]
+        "required": ["title", "description", "location", "date", "time", "duration"]
       },
       "UserOpportunity": {
         "type": "object",
         "properties": {
           "_id": { "type": "string", "description": "MongoDB ObjectId of the user-opportunity record" },
-          "userId": { "type": "string", "description": "MongoDB ObjectId referencing the user" },
-          "opportunityId": { "type": "string", "description": "MongoDB ObjectId referencing the opportunity" },
-          "createdAt": { "type": "string", "format": "date-time", "description": "Date the user signed up for the opportunity" },
-          "isDeleted": { "type": "boolean", "description": "Indicates if the signup is soft-deleted" },
-          "deleteDate": { "type": "string", "format": "date-time", "nullable": true, "description": "Date of soft deletion, null if not deleted" },
-          "approvedBy": { "type": "string", "nullable": true, "description": "MongoDB ObjectId of the user who approved the hours, null if not approved" },
-          "approvedOn": { "type": "string", "format": "date-time", "nullable": true, "description": "Date the hours were approved, null if not approved" }
+          "userId": { "type": "string", "description": "GitHub user ID" },
+          "opportunityId": { "type": "string", "description": "MongoDB ObjectId of the opportunity" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "isDeleted": { "type": "boolean" },
+          "deleteDate": { "type": "string", "format": "date-time", "nullable": true },
+          "approvedBy": { "type": "string", "nullable": true, "description": "GitHub user ID of the approver" },
+          "approvedOn": { "type": "string", "format": "date-time", "nullable": true }
         },
         "required": ["_id", "userId", "opportunityId", "createdAt", "isDeleted"]
       },
@@ -181,84 +153,123 @@
         }
       }
     },
-    "/api/users": {
+    "/auth/github": {
       "get": {
-        "tags": ["Volunteer Tracking API"],
-        "summary": "Get all users",
-        "description": "Retrieves a list of all users (non-deleted).",
+        "tags": ["Authentication"],
+        "summary": "Initiate GitHub OAuth login",
+        "description": "Redirects to GitHub for OAuth 2.0 authentication.",
         "responses": {
-          "200": {
-            "description": "List of users",
+          "302": {
+            "description": "Redirects to GitHub authorization page"
+          }
+        }
+      }
+    },
+    "/auth/github/callback": {
+      "get": {
+        "tags": ["Authentication"],
+        "summary": "GitHub OAuth callback",
+        "description": "Handles the callback from GitHub OAuth, authenticates the user, and redirects to Swagger UI.",
+        "responses": {
+          "302": {
+            "description": "Redirects to /api-docs on success or /auth/login on failure"
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "get": {
+        "tags": ["Authentication"],
+        "summary": "Login page",
+        "description": "Returns an unauthorized message prompting GitHub login.",
+        "responses": {
+          "401": {
+            "description": "Unauthorized - Please log in via GitHub",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "message": { "type": "string", "example": "Users fetched successfully" },
-                    "data": {
-                      "type": "array",
-                      "items": { "$ref": "#/components/schemas/User" }
-                    }
+                    "message": { "type": "string", "example": "Unauthorized - Please log in via GitHub" }
                   }
                 }
               }
             }
-          },
-          "404": {
-            "description": "No users found",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
-            }
-          },
-          "500": {
-            "description": "Failed to fetch users",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
-            }
           }
         }
-      },
-      "post": {
-        "tags": ["Volunteer Tracking API"],
-        "summary": "Create a new user",
-        "description": "Creates a new user with the provided details.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/UserInput" }
-            }
+      }
+    },
+    "/auth/logout": {
+      "get": {
+        "tags": ["Authentication"],
+        "summary": "Logout",
+        "description": "Logs out the current user by clearing the session and redirects to the login page.",
+        "responses": {
+          "302": {
+            "description": "Redirects to /auth/login after logout"
           }
-        },
+        }
+      }
+    },
+    "/api/users": {
+      "get": {
+        "tags": ["Volunteer Tracking API"],
+        "summary": "Get authenticated user",
+        "description": "Returns the authenticated GitHub user's info.",
+        "security": [{ "OAuth2": ["user:email"] }],
         "responses": {
           "200": {
-            "description": "User created successfully",
+            "description": "User info fetched",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "message": { "type": "string", "example": "User created successfully" },
+                    "message": { "type": "string", "example": "User info fetched" },
                     "data": { "$ref": "#/components/schemas/User" }
                   }
                 }
               }
             }
           },
-          "422": {
-            "description": "Invalid input",
+          "401": {
+            "description": "Unauthorized - User not authenticated"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Volunteer Tracking API"],
+        "summary": "Create user (placeholder)",
+        "description": "Placeholder for creating a user; returns authenticated GitHub user info.",
+        "security": [{ "OAuth2": ["user:email"] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/User" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User info fetched",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string", "example": "User info fetched" },
+                    "data": { "$ref": "#/components/schemas/User" }
+                  }
+                }
               }
             }
           },
-          "500": {
-            "description": "Failed to create user",
+          "401": {
+            "description": "Unauthorized - User not authenticated"
+          },
+          "422": {
+            "description": "Invalid input",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ErrorResponse" }
@@ -271,15 +282,16 @@
     "/api/users/{id}": {
       "get": {
         "tags": ["Volunteer Tracking API"],
-        "summary": "Get user by ID",
-        "description": "Retrieves a user by their ID.",
+        "summary": "Get user by GitHub ID",
+        "description": "Returns the authenticated GitHub user's info if the ID matches.",
+        "security": [{ "OAuth2": ["user:email"] }],
         "parameters": [
           {
             "in": "path",
             "name": "id",
             "required": true,
-            "schema": { "type": "string", "pattern": "^[0-9a-fA-F]{24}$" },
-            "description": "MongoDB ObjectId of the user"
+            "schema": { "type": "string" },
+            "description": "GitHub user ID"
           }
         ],
         "responses": {
@@ -297,24 +309,11 @@
               }
             }
           },
-          "422": {
-            "description": "Invalid user ID format",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
-            }
+          "401": {
+            "description": "Unauthorized - User not authenticated"
           },
-          "404": {
-            "description": "User not found",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
-            }
-          },
-          "500": {
-            "description": "Failed to fetch user",
+          "403": {
+            "description": "Forbidden - Can only fetch own user data",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ErrorResponse" }
@@ -325,56 +324,54 @@
       },
       "put": {
         "tags": ["Volunteer Tracking API"],
-        "summary": "Update user by ID",
-        "description": "Updates a user's details by their ID.",
+        "summary": "Update user (placeholder)",
+        "description": "Placeholder for updating user; returns authenticated GitHub user info if ID matches.",
+        "security": [{ "OAuth2": ["user:email"] }],
         "parameters": [
           {
             "in": "path",
             "name": "id",
             "required": true,
-            "schema": { "type": "string", "pattern": "^[0-9a-fA-F]{24}$" },
-            "description": "MongoDB ObjectId of the user"
+            "schema": { "type": "string" },
+            "description": "GitHub user ID"
           }
         ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/UserInput" }
+              "schema": { "$ref": "#/components/schemas/User" }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "User updated successfully",
+            "description": "User info fetched",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "message": { "type": "string", "example": "User updated successfully" },
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "matchedCount": { "type": "integer", "example": 1 },
-                        "modifiedCount": { "type": "integer", "example": 1 }
-                      }
-                    }
+                    "message": { "type": "string", "example": "User info fetched" },
+                    "data": { "$ref": "#/components/schemas/User" }
                   }
                 }
               }
             }
           },
-          "422": {
-            "description": "Invalid input or user ID format",
+          "401": {
+            "description": "Unauthorized - User not authenticated"
+          },
+          "403": {
+            "description": "Forbidden - Can only update own user data",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           },
-          "500": {
-            "description": "Failed to update user",
+          "422": {
+            "description": "Invalid input",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ErrorResponse" }
@@ -385,56 +382,38 @@
       },
       "delete": {
         "tags": ["Volunteer Tracking API"],
-        "summary": "Delete user by ID",
-        "description": "Soft deletes a user by their ID.",
+        "summary": "Delete user (placeholder)",
+        "description": "Placeholder for deleting user; returns a message indicating no user data is stored.",
+        "security": [{ "OAuth2": ["user:email"] }],
         "parameters": [
           {
             "in": "path",
             "name": "id",
             "required": true,
-            "schema": { "type": "string", "pattern": "^[0-9a-fA-F]{24}$" },
-            "description": "MongoDB ObjectId of the user"
+            "schema": { "type": "string" },
+            "description": "GitHub user ID"
           }
         ],
         "responses": {
           "200": {
-            "description": "User deleted successfully",
+            "description": "User deletion not applicable",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "message": { "type": "string", "example": "User deleted successfully" },
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "matchedCount": { "type": "integer", "example": 1 },
-                        "modifiedCount": { "type": "integer", "example": 1 }
-                      }
-                    }
+                    "message": { "type": "string", "example": "User deletion not applicable" },
+                    "data": { "type": "object", "example": { "message": "No user data stored" } }
                   }
                 }
               }
             }
           },
-          "422": {
-            "description": "Invalid user ID format",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
-            }
+          "401": {
+            "description": "Unauthorized - User not authenticated"
           },
-          "404": {
-            "description": "User not found",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
-            }
-          },
-          "500": {
-            "description": "Failed to delete user",
+          "403": {
+            "description": "Forbidden - Can only delete own user data",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ErrorResponse" }
@@ -449,6 +428,7 @@
         "tags": ["Volunteer Tracking API"],
         "summary": "Get all opportunities",
         "description": "Retrieves a list of all opportunities (non-deleted).",
+        "security": [{ "OAuth2": ["user:email"] }],
         "responses": {
           "200": {
             "description": "List of opportunities",
@@ -467,16 +447,11 @@
               }
             }
           },
+          "401": {
+            "description": "Unauthorized - User not authenticated"
+          },
           "404": {
             "description": "No opportunities found",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
-            }
-          },
-          "500": {
-            "description": "Failed to fetch opportunities",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ErrorResponse" }
@@ -488,7 +463,8 @@
       "post": {
         "tags": ["Volunteer Tracking API"],
         "summary": "Create a new opportunity",
-        "description": "Creates a new opportunity with the provided details.",
+        "description": "Creates a new opportunity. Requires organizer role.",
+        "security": [{ "OAuth2": ["user:email"] }],
         "requestBody": {
           "required": true,
           "content": {
@@ -512,16 +488,19 @@
               }
             }
           },
-          "422": {
-            "description": "Invalid input",
+          "401": {
+            "description": "Unauthorized - User not authenticated"
+          },
+          "403": {
+            "description": "Forbidden - Only organizers can create opportunities",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           },
-          "500": {
-            "description": "Failed to create opportunity",
+          "422": {
+            "description": "Invalid input",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ErrorResponse" }
@@ -536,6 +515,7 @@
         "tags": ["Volunteer Tracking API"],
         "summary": "Get opportunity by ID",
         "description": "Retrieves an opportunity by its ID.",
+        "security": [{ "OAuth2": ["user:email"] }],
         "parameters": [
           {
             "in": "path",
@@ -560,6 +540,9 @@
               }
             }
           },
+          "401": {
+            "description": "Unauthorized - User not authenticated"
+          },
           "422": {
             "description": "Invalid opportunity ID format",
             "content": {
@@ -575,21 +558,14 @@
                 "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
-          },
-          "500": {
-            "description": "Failed to fetch opportunity",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
-            }
           }
         }
       },
       "put": {
         "tags": ["Volunteer Tracking API"],
         "summary": "Update opportunity by ID",
-        "description": "Updates an opportunity's details by its ID.",
+        "description": "Updates an opportunity's details. Requires organizer role.",
+        "security": [{ "OAuth2": ["user:email"] }],
         "parameters": [
           {
             "in": "path",
@@ -628,6 +604,17 @@
               }
             }
           },
+          "401": {
+            "description": "Unauthorized - User not authenticated"
+          },
+          "403": {
+            "description": "Forbidden - Only the organizer can update",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
           "422": {
             "description": "Invalid input or opportunity ID format",
             "content": {
@@ -636,8 +623,8 @@
               }
             }
           },
-          "500": {
-            "description": "Failed to update opportunity",
+          "404": {
+            "description": "Opportunity not found",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ErrorResponse" }
@@ -649,7 +636,8 @@
       "delete": {
         "tags": ["Volunteer Tracking API"],
         "summary": "Delete opportunity by ID",
-        "description": "Soft deletes an opportunity by its ID.",
+        "description": "Soft deletes an opportunity. Requires organizer role.",
+        "security": [{ "OAuth2": ["user:email"] }],
         "parameters": [
           {
             "in": "path",
@@ -680,6 +668,17 @@
               }
             }
           },
+          "401": {
+            "description": "Unauthorized - User not authenticated"
+          },
+          "403": {
+            "description": "Forbidden - Only the organizer can delete",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
           "422": {
             "description": "Invalid opportunity ID format",
             "content": {
@@ -695,14 +694,6 @@
                 "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
-          },
-          "500": {
-            "description": "Failed to delete opportunity",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
-            }
           }
         }
       }
@@ -712,13 +703,14 @@
         "tags": ["Volunteer Tracking API"],
         "summary": "Get user opportunities",
         "description": "Retrieves opportunities signed up by a user.",
+        "security": [{ "OAuth2": ["user:email"] }],
         "parameters": [
           {
             "in": "path",
             "name": "userId",
             "required": true,
-            "schema": { "type": "string", "pattern": "^[0-9a-fA-F]{24}$" },
-            "description": "MongoDB ObjectId of the user"
+            "schema": { "type": "string" },
+            "description": "GitHub user ID"
           }
         ],
         "responses": {
@@ -739,8 +731,11 @@
               }
             }
           },
-          "422": {
-            "description": "Invalid user ID format",
+          "401": {
+            "description": "Unauthorized - User not authenticated"
+          },
+          "403": {
+            "description": "Forbidden - Can only fetch own opportunities",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ErrorResponse" }
@@ -749,14 +744,6 @@
           },
           "404": {
             "description": "No opportunities found for user",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
-            }
-          },
-          "500": {
-            "description": "Failed to fetch user opportunities",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ErrorResponse" }
@@ -771,13 +758,14 @@
         "tags": ["Volunteer Tracking API"],
         "summary": "Sign up for an opportunity",
         "description": "Signs a user up for an opportunity using their IDs.",
+        "security": [{ "OAuth2": ["user:email"] }],
         "parameters": [
           {
             "in": "path",
             "name": "userId",
             "required": true,
-            "schema": { "type": "string", "pattern": "^[0-9a-fA-F]{24}$" },
-            "description": "MongoDB ObjectId of the user"
+            "schema": { "type": "string" },
+            "description": "GitHub user ID"
           },
           {
             "in": "path",
@@ -802,16 +790,19 @@
               }
             }
           },
-          "422": {
-            "description": "Invalid user ID or opportunity ID format",
+          "401": {
+            "description": "Unauthorized - User not authenticated"
+          },
+          "403": {
+            "description": "Forbidden - Can only sign up self",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ErrorResponse" }
               }
             }
           },
-          "500": {
-            "description": "Failed to sign up for opportunity",
+          "422": {
+            "description": "Invalid user ID or opportunity ID format",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ErrorResponse" }
@@ -825,14 +816,15 @@
       "put": {
         "tags": ["Volunteer Tracking API"],
         "summary": "Approve volunteered hours",
-        "description": "Approves volunteered hours for a user-opportunity record.",
+        "description": "Approves volunteered hours for a user-opportunity record. Requires approver role.",
+        "security": [{ "OAuth2": ["user:email"] }],
         "parameters": [
           {
             "in": "path",
             "name": "userId",
             "required": true,
-            "schema": { "type": "string", "pattern": "^[0-9a-fA-F]{24}$" },
-            "description": "MongoDB ObjectId of the approving user"
+            "schema": { "type": "string" },
+            "description": "GitHub user ID"
           },
           {
             "in": "path",
@@ -863,6 +855,17 @@
               }
             }
           },
+          "401": {
+            "description": "Unauthorized - User not authenticated"
+          },
+          "403": {
+            "description": "Forbidden - Only approvers can approve hours",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
           "422": {
             "description": "Invalid user ID or user opportunity ID format",
             "content": {
@@ -871,8 +874,8 @@
               }
             }
           },
-          "500": {
-            "description": "Failed to approve hours",
+          "404": {
+            "description": "User-opportunity record not found",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ErrorResponse" }
@@ -887,6 +890,7 @@
         "tags": ["Volunteer Tracking API"],
         "summary": "Withdraw from an opportunity",
         "description": "Soft deletes a user-opportunity record by its ID.",
+        "security": [{ "OAuth2": ["user:email"] }],
         "parameters": [
           {
             "in": "path",
@@ -917,6 +921,17 @@
               }
             }
           },
+          "401": {
+            "description": "Unauthorized - User not authenticated"
+          },
+          "403": {
+            "description": "Forbidden - Can only withdraw self",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
           "422": {
             "description": "Invalid userOpportunityId format",
             "content": {
@@ -927,14 +942,6 @@
           },
           "404": {
             "description": "User-opportunity record not found",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
-              }
-            }
-          },
-          "500": {
-            "description": "Failed to withdraw from opportunity",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ErrorResponse" }

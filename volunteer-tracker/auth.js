@@ -1,27 +1,25 @@
 const passport = require('passport');
-const JwtStrategy = require('passport-jwt').Strategy;
-const ExtractJwt = require('passport-jwt').ExtractJwt;
-const volunteerModel = require('./models/volunteer-tracking-api-model');
+const GitHubStrategy = require('passport-github2').Strategy;
 require('dotenv').config();
 
-// JWT strategy options
-const opts = {
-    jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-    secretOrKey: process.env.JWT_SECRET
-};
-
-// JWT strategy to verify tokens
-passport.use(new JwtStrategy(opts, async (jwt_payload, done) => {
-    try {
-        // Find user by ID from JWT payload
-        const user = await volunteerModel.getUserById(jwt_payload.id);
-        if (user) {
-            return done(null, user); // User found, attach to req.user
-        }
-        return done(null, false); // No user found
-    } catch (error) {
-        return done(error, false); // Error during verification
-    }
+// Configure GitHub OAuth strategy
+passport.use(new GitHubStrategy({
+    clientID: process.env.GITHUB_CLIENT_ID,
+    clientSecret: process.env.GITHUB_CLIENT_SECRET,
+    callbackURL: process.env.GITHUB_CALLBACK_URL
+}, (accessToken, refreshToken, profile, done) => {
+    console.log('GitHub callback:', { accessToken: accessToken ? 'present' : 'missing', profile });
+    return done(null, profile); // Pass profile directly, no database lookup
 }));
+
+// Serialize user into session
+passport.serializeUser((user, done) => {
+    done(null, user.id); // Use GitHub profile.id
+});
+
+// Deserialize user from session
+passport.deserializeUser((id, done) => {
+    done(null, { id }); // No database lookup, return minimal user object
+});
 
 module.exports = passport;

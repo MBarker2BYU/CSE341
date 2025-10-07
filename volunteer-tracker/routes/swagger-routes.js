@@ -6,11 +6,17 @@ const router = express.Router();
 
 router.use('/api-docs', swaggerUi.serve);
 router.get('/api-docs', swaggerUi.setup(swaggerDocument, {
-  swaggerOptions: {
-    supportedSubmitMethods: ['get', 'post', 'put', 'delete'],
-    docExpansion: 'none' // Optional: Collapse docs for clarity
-  },
-  customCss: '.swagger-ui .topbar { display: none; }' // Optional: Hide top bar for simplicity
+    swaggerOptions: {
+        oauth2RedirectUrl: 'http://localhost:8080/auth/github/callback',
+        oauth: {
+            clientId: process.env.GITHUB_CLIENT_ID,
+            appName: 'Volunteer Tracking API',
+            scopes: 'user:email'
+        },
+        supportedSubmitMethods: ['get', 'post', 'put', 'delete'],
+        docExpansion: 'none'
+    },
+    customCss: '.swagger-ui .topbar { display: none; }'
 }));
 
 module.exports = router;
