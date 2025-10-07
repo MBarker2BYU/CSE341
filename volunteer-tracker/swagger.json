@@ -8,7 +8,11 @@
   "servers": [
     {
       "url": "http://localhost:8080",
-      "description": "Local server"
+      "description": "Local development server"
+    },
+    {
+      "url": "https://cse341-volunteer-tracker.onrender.com",
+      "description": "Production server on Render"
     }
   ],
   "tags": [
@@ -143,7 +147,7 @@
                   "properties": {
                     "message": {
                       "type": "string",
-                      "example": "Volunteer Tracker API is running! - Database 'volunteer-db' is connected."
+                      "example": "Volunteer Tracker API is running! - Database 'volunteer-db' connected and ready!"
                     }
                   }
                 }
