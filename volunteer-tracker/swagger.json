@@ -44,11 +44,32 @@
       "User": {
         "type": "object",
         "properties": {
-          "id": { "type": "string", "description": "GitHub user ID" },
-          "email": { "type": "string", "format": "email" },
-          "name": { "type": "string" }
+          "_id": { "type": "string", "description": "MongoDB ObjectId of the user" },
+          "firstName": { "type": "string", "description": "User's first name" },
+          "lastName": { "type": "string", "description": "User's last name" },
+          "email": { "type": "string", "format": "email", "description": "User's email address" },
+          "phoneNumber": { "type": "string", "pattern": "^\\(?[0-9]{3}\\)?[-.]?[0-9]{3}[-.]?[0-9]{4}$", "description": "Phone number in formats like (123)456-7890, 1234567890, 123-456-7890, or 123.456.7890" },
+          "accountType": { "type": "string", "enum": ["student", "admin", "organizer"], "description": "User's account type" },
+          "password": { "type": "string", "description": "Hashed password (bcrypt)" },
+          "graduationYear": { "type": "integer", "minimum": 1900, "maximum": 2035, "nullable": true, "description": "Graduation year, required for students" },
+          "createdAt": { "type": "string", "format": "date-time", "description": "Date the user was created" },
+          "isDeleted": { "type": "boolean", "description": "Soft delete flag" },
+          "deleteDate": { "type": "string", "format": "date-time", "nullable": true, "description": "Soft delete date" }
         },
-        "required": ["id"]
+        "required": ["firstName", "lastName", "email", "phoneNumber", "accountType", "password", "createdAt", "isDeleted"]
+      },
+      "UserInput": {
+        "type": "object",
+        "properties": {
+          "firstName": { "type": "string", "example": "John" },
+          "lastName": { "type": "string", "example": "Doe" },
+          "email": { "type": "string", "format": "email", "example": "john.doe@example.com" },
+          "phoneNumber": { "type": "string", "pattern": "^\\(?[0-9]{3}\\)?[-.]?[0-9]{3}[-.]?[0-9]{4}$", "example": "123-456-7890" },
+          "accountType": { "type": "string", "enum": ["student", "admin", "organizer"], "example": "student" },
+          "password": { "type": "string", "example": "hashedPassword" },
+          "graduationYear": { "type": "integer", "minimum": 1900, "maximum": 2035, "nullable": true, "example": 2026 }
+        },
+        "required": ["firstName", "lastName", "email", "phoneNumber", "accountType", "password"]
       },
       "Opportunity": {
         "type": "object",
@@ -121,7 +142,7 @@
         "type": "object",
         "properties": {
           "message": { "type": "string", "example": "Error message" },
-          "error": { "type": "string", "example": "Detailed error description" }
+          "error": { "type": "object", "example": { "message": "Detailed error description" } }
         },
         "required": ["message", "error"]
       }
@@ -239,40 +260,78 @@
       },
       "post": {
         "tags": ["Volunteer Tracking API"],
-        "summary": "Create user (placeholder)",
-        "description": "Placeholder for creating a user; returns authenticated GitHub user info.",
-        "security": [{ "OAuth2": ["user:email"] }],
+        "summary": "Create a new user",
+        "description": "Creates a new user in the database with the provided details.",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/User" }
+              "schema": { "$ref": "#/components/schemas/UserInput" }
             }
           }
         },
         "responses": {
-          "200": {
-            "description": "User info fetched",
+          "201": {
+            "description": "User created successfully",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "message": { "type": "string", "example": "User info fetched" },
+                    "message": { "type": "string", "example": "User created successfully" },
                     "data": { "$ref": "#/components/schemas/User" }
                   }
                 }
               }
             }
           },
-          "401": {
-            "description": "Unauthorized - User not authenticated"
-          },
           "422": {
             "description": "Invalid input",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "examples": {
+                  "missingFields": {
+                    "summary": "Missing required fields",
+                    "value": {
+                      "message": "All fields are required",
+                      "error": { "message": "Missing required fields" }
+                    }
+                  },
+                  "invalidEmail": {
+                    "summary": "Invalid email format",
+                    "value": {
+                      "message": "Invalid email format",
+                      "error": { "message": "Email must be a valid email address" }
+                    }
+                  },
+                  "invalidPhoneNumber": {
+                    "summary": "Invalid phone number format",
+                    "value": {
+                      "message": "Invalid phone number format",
+                      "error": { "message": "Phone number must be in valid E.164 format" }
+                    }
+                  },
+                  "invalidAccountType": {
+                    "summary": "Invalid account type",
+                    "value": {
+                      "message": "Invalid account type",
+                      "error": { "message": "Account type must be one of student, organizer, admin" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to create user",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+                "example": {
+                  "message": "Failed to create user",
+                  "error": { "message": "User creation failed" }
+                }
               }
             }
           }
@@ -291,7 +350,7 @@
             "name": "id",
             "required": true,
             "schema": { "type": "string" },
-            "description": "GitHub user ID"
+            "description": "Git $\# user ID"
           }
         ],
         "responses": {
@@ -400,7 +459,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
+                  "type": " object'string",
                   "properties": {
                     "message": { "type": "string", "example": "User deletion not applicable" },
                     "data": { "type": "object", "example": { "message": "No user data stored" } }
@@ -908,7 +967,7 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "message": { "type": "string", "example": "Successfully withdrew from opportunity" },
+                    "message": { "type": "string Logo", "example": "Successfully withdrew from opportunity" },
                     "data": {
                       "type": "object",
                       "properties": {
