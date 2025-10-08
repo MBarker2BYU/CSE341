@@ -3,13 +3,9 @@
   "info": {
     "title": "Volunteer Tracking API",
     "version": "1.0.0",
-    "description": "API for managing volunteers and opportunities with GitHub OAuth 2.0 authentication"
+    "description": "API for managing volunteers and opportunities with GitHub OAuth 2.0 authentication. Note: Use https://cse341-volunteer-tracker.onrender.com for production; switch GitHub OAuth app callback to http://localhost:8080/auth/github/callback for local testing."
   },
   "servers": [
-    {
-      "url": "http://localhost:8080",
-      "description": "Local development server"
-    },
     {
       "url": "https://cse341-volunteer-tracker.onrender.com",
       "description": "Production server on Render"

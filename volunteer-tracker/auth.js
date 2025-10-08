@@ -2,10 +2,12 @@ const passport = require('passport');
 const GitHubStrategy = require('passport-github2').Strategy;
 require('dotenv').config();
 
-// Set callback URL based on environment
-const callbackURL = process.env.NODE_ENV === 'production'
-    ? 'https://cse341-volunteer-tracker.onrender.com/auth/github/callback'
-    : 'http://localhost:8080/auth/github/callback';
+// Use GITHUB_CALLBACK_URL from environment
+const callbackURL = process.env.GITHUB_CALLBACK_URL;
+if (!callbackURL) {
+    throw new Error('GITHUB_CALLBACK_URL is not set in environment variables');
+}
+console.log('Using callback URL:', callbackURL); // Debug log
 
 // Configure GitHub OAuth strategy
 passport.use(new GitHubStrategy({

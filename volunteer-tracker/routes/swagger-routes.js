@@ -4,10 +4,12 @@ const swaggerDocument = require('../swagger.json');
 
 const router = express.Router();
 
-// Set OAuth redirect URL based on environment
-const oauth2RedirectUrl = process.env.NODE_ENV === 'production'
-    ? 'https://cse341-volunteer-tracker.onrender.com/auth/github/callback'
-    : 'http://localhost:8080/auth/github/callback';
+// Use GITHUB_CALLBACK_URL from environment
+const oauth2RedirectUrl = process.env.GITHUB_CALLBACK_URL;
+if (!oauth2RedirectUrl) {
+    throw new Error('GITHUB_CALLBACK_URL is not set in environment variables');
+}
+console.log('Using OAuth Redirect URL:', oauth2RedirectUrl); // Debug log
 
 router.use('/api-docs', swaggerUi.serve);
 router.get('/api-docs', swaggerUi.setup(swaggerDocument, {
