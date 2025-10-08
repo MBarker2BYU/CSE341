@@ -350,7 +350,7 @@
             "name": "id",
             "required": true,
             "schema": { "type": "string" },
-            "description": "Git $\# user ID"
+            "description": "GitHub user ID"
           }
         ],
         "responses": {
@@ -459,7 +459,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": " object'string",
+                  "type": "object",
                   "properties": {
                     "message": { "type": "string", "example": "User deletion not applicable" },
                     "data": { "type": "object", "example": { "message": "No user data stored" } }
@@ -967,7 +967,7 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "message": { "type": "string Logo", "example": "Successfully withdrew from opportunity" },
+                    "message": { "type": "string", "example": "Successfully withdrew from opportunity" },
                     "data": {
                       "type": "object",
                       "properties": {
